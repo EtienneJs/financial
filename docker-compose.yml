@@ -9,4 +9,4 @@ services:
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_DB=${DB_NAME}
     ports:
-      - ${DB_HOST}:${DB_PORT}
+      - ${DB_PORT}:${DB_PORT}

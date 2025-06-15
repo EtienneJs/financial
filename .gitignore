@@ -8,6 +8,9 @@
 # environment variables
 /.env
 
+# postgresql
+/postgres-db
+
 # Logs
 logs
 *.log

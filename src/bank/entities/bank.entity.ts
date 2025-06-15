@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { BankAccount } from "./bank-account";
+import { BankAccount } from "./bank-account.entity";
 
 @Entity({name: 'banco'})
 export class Bank {
@@ -29,6 +29,4 @@ export class Bank {
     })
 
     account: BankAccount[];
-
-
 }
