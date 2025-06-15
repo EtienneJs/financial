@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BankAccount } from "./bank-account";
 
 @Entity({name: 'banco'})
 export class Bank {
@@ -11,16 +12,23 @@ export class Bank {
     })
     name: string;
 
+    @Column('text', {
+        nullable: true
+    })
+    image: string;
+
     @Column ('text', {
         nullable: true,
         array: true,
         default:[]
     })
 
-    account: string[];
-
-    @Column('text', {
-        nullable: true
+    @OneToMany(() => BankAccount, (account) => account.bank, {
+        cascade: true,
+        eager: true,
     })
-    image: string;
+
+    account: BankAccount[];
+
+
 }
