@@ -28,7 +28,7 @@ export class BankController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.bankService.remove(+id);
+  remove(@Param('id',ParseUUIDPipe) id: string) {
+    return this.bankService.remove(id);
   }
 }

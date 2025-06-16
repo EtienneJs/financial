@@ -95,8 +95,20 @@ export class BankService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} bank`;
+  async remove(id: string) {
+    try {
+      const bank = await this.bankRepository.findOneBy({ id });
+      if (!bank) {
+        throw new BadRequestException(`Bank with id ${id} not found`);
+      }
+      await this.bankRepository.delete(id);
+      return `This action removes a #${id} bank`;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.handleDBErrors(error);
+    }
   }
 
 
