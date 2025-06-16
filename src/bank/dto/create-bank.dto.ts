@@ -1,5 +1,4 @@
 import { ArrayMinSize, IsArray, IsString, Min, MinLength, ValidateNested } from "class-validator";
-import { BankAccount } from "../entities/bank-account.entity";
 import { CreateBankAccountDto } from "./create-bank-account.dto";
 import { Type } from "class-transformer";
 
