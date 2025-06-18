@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Bank } from "./bank.entity";
+import { Bank } from "../../bank/entities/bank.entity";
 
 @Entity({name: 'account'})
 export class BankAccount {

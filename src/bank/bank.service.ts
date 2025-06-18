@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Bank } from './entities/bank.entity';
 import { Not, Repository } from 'typeorm';
 import { BankAccount } from './entities/bank-account.entity';
-import e from 'express';
 
 @Injectable()
 export class BankService {

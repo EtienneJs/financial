@@ -2,11 +2,18 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from
 import { BankService } from './bank.service';
 import { CreateBankDto } from './dto/create-bank.dto';
 import { UpdateBankDto } from './dto/update-bank.dto';
+import { CreateBankAccountDto } from './dto/create-bank-account.dto';
+import { BankAccountService } from './bank-account.service';
+import { UpdateBankAccountDto } from './dto/update-bank-account.dto';
 
 @Controller('bank')
 export class BankController {
-  constructor(private readonly bankService: BankService) {}
+  constructor(
+    private readonly bankService: BankService,
+    private readonly bankAccountService: BankAccountService,
+  ) {}
 
+  // Bank Endpoints
   @Post()
   create(@Body() createBankDto: CreateBankDto) {
     return this.bankService.create(createBankDto);
@@ -30,5 +37,26 @@ export class BankController {
   @Delete(':id')
   remove(@Param('id',ParseUUIDPipe) id: string) {
     return this.bankService.remove(id);
+  }
+
+  // Bank Account Endpoints
+  @Post('/create-account/:bankId')
+  createAccount(
+    @Param('bankId', ParseUUIDPipe) bankId: string,
+    @Body() createBankDto: CreateBankAccountDto
+  ) {
+    return this.bankAccountService.createAccount(bankId, createBankDto);
+  }
+
+  @Patch('/update-account/:id')
+  updateAccount(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateBankDto: UpdateBankAccountDto
+  ) {
+    return this.bankAccountService.updateAccount(id, updateBankDto);
+  }
+  @Delete('/delete-account/:id')
+  removeAccount(@Param('id', ParseUUIDPipe) id: string) {
+    return this.bankAccountService.removeAccount(id);
   }
 }
