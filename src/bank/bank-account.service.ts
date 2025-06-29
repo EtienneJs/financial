@@ -5,6 +5,9 @@ import { BankAccount } from "./entities/bank-account.entity";
 import { Not, Repository } from "typeorm";
 import { CreateBankAccountDto } from "./dto/create-bank-account.dto";
 import { UpdateBankAccountDto } from "./dto/update-bank-account.dto";
+import { Transaction } from "./entities/transaction.entity";
+import { CreateTransactionDto } from "./dto/create-transaction.dto";
+import { UpdateTransactionDto } from "./dto/update-transaction.dto";
 
 @Injectable()
 export class BankAccountService {
@@ -13,6 +16,8 @@ export class BankAccountService {
         private readonly bankAccountRepository: Repository<BankAccount>,
         @InjectRepository(Bank)
         private readonly bankRepository: Repository<Bank>,
+        @InjectRepository(Transaction)
+        private readonly transactionRepository: Repository<Transaction>,
       ) { }
 
       async createAccount(bankId: string, createBankAccountDto: CreateBankAccountDto): Promise<BankAccount | undefined> {
@@ -67,5 +72,75 @@ export class BankAccountService {
             throw new NotFoundException('Cuenta bancaria no encontrada');
         }
         await this.bankAccountRepository.remove(account);
+    }
+
+    async createTransaction(
+        id: string,
+        createTransactionDto: CreateTransactionDto
+    ): Promise<Transaction | undefined> {
+        try {
+            return this.transactionRepository.manager.transaction(async (transactionalEntityManager) => {
+            // Verifica si la cuenta bancaria existe
+            const account = await transactionalEntityManager.findOne(BankAccount, { where: { id } });
+            if (!account) {
+                throw new NotFoundException('Cuenta bancaria no encontrada');
+            }
+            // Crea una nueva transacción
+            const newTransaction = transactionalEntityManager.create(Transaction, {
+                ...createTransactionDto,
+                date: new Date(), // Asigna la fecha actual
+                account: account // Asocia la transacción con la cuenta bancaria
+            });
+
+            transactionalEntityManager.merge(BankAccount, account, {
+                current_balance: account.current_balance + createTransactionDto.amount // Actualiza el saldo de la cuenta
+            });
+            // Guarda la transacción y actualiza el saldo de la cuenta
+            return await transactionalEntityManager.transaction(async (transactionalEntityManager) => {
+                const savedTransaction = await transactionalEntityManager.save(Transaction, newTransaction);
+                await transactionalEntityManager.save(BankAccount, account);
+                savedTransaction.account.current_balance = account.current_balance; // Asocia la cuenta a la transacción guardada
+                return savedTransaction;    
+            })
+        });
+        } catch (error) {
+            if (error instanceof NotFoundException || error instanceof ConflictException) {
+                throw error; // Re-lanza el error de cuenta no encontrada o conflicto
+            } else {
+                throw new BadRequestException('Error al crear la transacción');
+            }
+        }
+
+    }
+
+    async updateTransaction( idTransaction:string, updateTransactionDto:UpdateTransactionDto ){
+        try {
+            const transaction = await this.bankAccountRepository.manager.findOne(Transaction, { where: { id: idTransaction } });
+            if (!transaction) {
+                throw new NotFoundException('Transacción no encontrada');
+            }
+            // Verifica si la cuenta
+            const account = await this.bankAccountRepository.findOne({ where: { id: updateTransactionDto.account_id } });
+            if (!account) {
+                throw new NotFoundException('Cuenta bancaria no encontrada');
+            }
+            // Actualiza la transacción con los nuevos datos
+            const updatedTransaction = this.bankAccountRepository.manager.merge(Transaction, transaction, updateTransactionDto);
+            // Guarda la transacción actualizada en la base de datos
+            return await this.bankAccountRepository.manager.save(updatedTransaction);
+        } catch (error) {
+            if (error instanceof NotFoundException || error instanceof ConflictException) {
+                throw error; // Re-lanza el error de cuenta no encontrada o conflicto
+            } else {
+                throw new BadRequestException('Error al actualizar la transacción');
+            }
+        }
+    } 
+    async removeTransaction(id: string): Promise<void> {
+        const transaction = await this.bankAccountRepository.manager.findOne(Transaction, { where: { id } });
+        if (!transaction) {
+            throw new NotFoundException('Transacción no encontrada');
+        }
+        await this.bankAccountRepository.manager.remove(transaction);
     }
 }

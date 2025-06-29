@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Bank } from './entities/bank.entity';
 import { BankAccount } from './entities/bank-account.entity';
 import { BankAccountService } from './bank-account.service';
+import { Transaction } from './entities/transaction.entity';
 
 
 @Module({
@@ -13,7 +14,8 @@ import { BankAccountService } from './bank-account.service';
   imports:[
         TypeOrmModule.forFeature([
       Bank,
-      BankAccount
+      BankAccount,
+      Transaction
     ])
   ]
 })

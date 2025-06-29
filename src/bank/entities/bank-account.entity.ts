@@ -1,5 +1,6 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Bank } from "../../bank/entities/bank.entity";
+import { Transaction } from "./transaction.entity";
 
 @Entity({name: 'account'})
 export class BankAccount {
@@ -28,4 +29,10 @@ export class BankAccount {
         { onDelete: 'CASCADE' }
     )
     bank: Bank;
+
+    @OneToMany(() => Transaction, (transaction) => transaction.account, {
+        cascade: true,
+        eager: true,
+    })
+    transactions: Transaction[];
 }

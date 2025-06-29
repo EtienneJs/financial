@@ -5,6 +5,8 @@ import { UpdateBankDto } from './dto/update-bank.dto';
 import { CreateBankAccountDto } from './dto/create-bank-account.dto';
 import { BankAccountService } from './bank-account.service';
 import { UpdateBankAccountDto } from './dto/update-bank-account.dto';
+import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { UpdateTransactionDto } from './dto/update-transaction.dto';
 
 @Controller('bank')
 export class BankController {
@@ -59,4 +61,23 @@ export class BankController {
   removeAccount(@Param('id', ParseUUIDPipe) id: string) {
     return this.bankAccountService.removeAccount(id);
   }
+  @Post("/account/:id/transaction")
+  createTransaction(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() createTransactionDto: CreateTransactionDto
+  ) {
+    return this.bankAccountService.createTransaction(id, createTransactionDto);
+  }
+  @Patch('/account/transaction/:id')
+  updateTransaction(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateTransactionDto: UpdateTransactionDto
+  ) {
+    return this.bankAccountService.updateTransaction(id, updateTransactionDto);
+  }
+  @Delete('/account/transaction/:id')
+  removeTransaction(@Param('id', ParseUUIDPipe) id: string) {
+    return this.bankAccountService.removeTransaction(id);
+  } 
+
 }
