@@ -1,6 +1,4 @@
-import { ArrayMinSize, IsArray, IsDecimal, IsNumber, IsString, Min, MinLength, ValidateNested } from "class-validator";
-import { CreateBankAccountDto } from "./create-bank-account.dto";
-import { Type } from "class-transformer";
+import { ArrayMinSize, IsArray, IsDecimal, IsNumber, IsString, IsUUID, Min, MinLength, ValidateNested } from "class-validator";
 
 export class CreateTransactionDto {
     @IsString()
@@ -13,4 +11,8 @@ export class CreateTransactionDto {
     @IsString()
     @MinLength(3)
     currency: string;
+
+    @IsString()
+    @IsUUID()
+    accountDestiny: string;
 }
