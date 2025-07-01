@@ -85,21 +85,34 @@ export class BankAccountService {
             if (!account) {
                 throw new NotFoundException('Cuenta bancaria no encontrada');
             }
+
+            const accountDestiny = await transactionalEntityManager.findOne(BankAccount, 
+                { where: { id: createTransactionDto.accountDestiny } 
+            });
+            if (!accountDestiny) {
+                throw new NotFoundException('Cuenta de destino no encontrada');
+            }
+
             // Crea una nueva transacción
             const newTransaction = transactionalEntityManager.create(Transaction, {
                 ...createTransactionDto,
                 date: new Date(), // Asigna la fecha actual
-                account: account // Asocia la transacción con la cuenta bancaria
+                accountOrigin: account, // Asocia la cuenta de origen
+                accountDestiny: accountDestiny // Asocia la cuenta de destino
             });
 
             transactionalEntityManager.merge(BankAccount, account, {
-                current_balance: account.current_balance + createTransactionDto.amount // Actualiza el saldo de la cuenta
+                current_balance: account.current_balance - createTransactionDto.amount // Actualiza el saldo de la cuenta
+            });
+            transactionalEntityManager.merge(BankAccount, accountDestiny, {
+                current_balance: accountDestiny.current_balance + createTransactionDto.amount // Actualiza el saldo de la cuenta
             });
             // Guarda la transacción y actualiza el saldo de la cuenta
             return await transactionalEntityManager.transaction(async (transactionalEntityManager) => {
                 const savedTransaction = await transactionalEntityManager.save(Transaction, newTransaction);
                 await transactionalEntityManager.save(BankAccount, account);
-                savedTransaction.account.current_balance = account.current_balance; // Asocia la cuenta a la transacción guardada
+                savedTransaction.accountOrigin.current_balance = account.current_balance; 
+                savedTransaction.accountDestiny.current_balance = accountDestiny.current_balance; /// Asocia la cuenta a la transacción guardada
                 return savedTransaction;    
             })
         });
@@ -111,36 +124,5 @@ export class BankAccountService {
             }
         }
 
-    }
-
-    async updateTransaction( idTransaction:string, updateTransactionDto:UpdateTransactionDto ){
-        try {
-            const transaction = await this.bankAccountRepository.manager.findOne(Transaction, { where: { id: idTransaction } });
-            if (!transaction) {
-                throw new NotFoundException('Transacción no encontrada');
-            }
-            // Verifica si la cuenta
-            const account = await this.bankAccountRepository.findOne({ where: { id: updateTransactionDto.account_id } });
-            if (!account) {
-                throw new NotFoundException('Cuenta bancaria no encontrada');
-            }
-            // Actualiza la transacción con los nuevos datos
-            const updatedTransaction = this.bankAccountRepository.manager.merge(Transaction, transaction, updateTransactionDto);
-            // Guarda la transacción actualizada en la base de datos
-            return await this.bankAccountRepository.manager.save(updatedTransaction);
-        } catch (error) {
-            if (error instanceof NotFoundException || error instanceof ConflictException) {
-                throw error; // Re-lanza el error de cuenta no encontrada o conflicto
-            } else {
-                throw new BadRequestException('Error al actualizar la transacción');
-            }
-        }
-    } 
-    async removeTransaction(id: string): Promise<void> {
-        const transaction = await this.bankAccountRepository.manager.findOne(Transaction, { where: { id } });
-        if (!transaction) {
-            throw new NotFoundException('Transacción no encontrada');
-        }
-        await this.bankAccountRepository.manager.remove(transaction);
     }
 }

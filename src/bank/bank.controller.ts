@@ -68,16 +68,5 @@ export class BankController {
   ) {
     return this.bankAccountService.createTransaction(id, createTransactionDto);
   }
-  @Patch('/account/transaction/:id')
-  updateTransaction(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateTransactionDto: UpdateTransactionDto
-  ) {
-    return this.bankAccountService.updateTransaction(id, updateTransactionDto);
-  }
-  @Delete('/account/transaction/:id')
-  removeTransaction(@Param('id', ParseUUIDPipe) id: string) {
-    return this.bankAccountService.removeTransaction(id);
-  } 
 
 }
