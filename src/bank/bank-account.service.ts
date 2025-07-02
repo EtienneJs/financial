@@ -111,6 +111,7 @@ export class BankAccountService {
             return await transactionalEntityManager.transaction(async (transactionalEntityManager) => {
                 const savedTransaction = await transactionalEntityManager.save(Transaction, newTransaction);
                 await transactionalEntityManager.save(BankAccount, account);
+                await transactionalEntityManager.save(BankAccount, accountDestiny);
                 savedTransaction.accountOrigin.current_balance = account.current_balance; 
                 savedTransaction.accountDestiny.current_balance = accountDestiny.current_balance; /// Asocia la cuenta a la transacción guardada
                 return savedTransaction;    
