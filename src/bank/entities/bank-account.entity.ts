@@ -1,6 +1,7 @@
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Bank } from "../../bank/entities/bank.entity";
 import { Transaction } from "./transaction.entity";
+import { BuyHistory } from "src/buy-history/entities/buy-history.entity";
 
 @Entity({name: 'account'})
 export class BankAccount {
@@ -33,11 +34,19 @@ export class BankAccount {
     @OneToMany(() => Transaction, (transaction) => transaction.accountOrigin, {
         cascade: true,
         eager: true,
+
     })
     originTransactions: Transaction[];
-        @OneToMany(() => Transaction, (transaction) => transaction.accountDestiny, {
-        cascade: true,
-        eager: true,
+
+    @OneToMany(() => Transaction, (transaction) => transaction.accountDestiny, {
+    cascade: true,
+    eager: true,
     })
     destinyTransactions: Transaction[];
+
+    
+    @OneToMany( () => BuyHistory, (buyHistory) => buyHistory.banckAccount, {
+        eager: true,
+    })
+    buyHistory: BuyHistory[];
 }

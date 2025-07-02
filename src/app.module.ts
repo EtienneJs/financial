@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BankModule } from './bank/bank.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BuyHistoryModule } from './buy-history/buy-history.module';
 
 
 @Module({
@@ -20,7 +21,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       password: process.env.DB_PASSWORD,
       autoLoadEntities: true,
       synchronize: true,
-    }),],
+    }),
+    BuyHistoryModule,],
   controllers: [],
   providers: [],
 })
