@@ -6,6 +6,7 @@ import { Bank } from './entities/bank.entity';
 import { BankAccount } from './entities/bank-account.entity';
 import { BankAccountService } from './bank-account.service';
 import { Transaction } from './entities/transaction.entity';
+import { BuyHistoryModule } from 'src/buy-history/buy-history.module';
 
 
 @Module({
@@ -17,6 +18,7 @@ import { Transaction } from './entities/transaction.entity';
       BankAccount,
       Transaction
     ])
-  ]
+  ], 
+  exports: [TypeOrmModule, BankService, BankAccountService]
 })
 export class BankModule {}
