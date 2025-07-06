@@ -1,5 +1,5 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { BuyHistory } from "./buy-history.entity";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Product } from "./product.entity";
 
 @Entity({ name: 'category' })
 export class Category {
@@ -14,6 +14,7 @@ export class Category {
 
     @Column('text', {
         nullable: true,
+
     })
     image: string;
 
@@ -22,6 +23,8 @@ export class Category {
     })
     description: string;
 
-    @OneToMany(() => BuyHistory, (buyHistory) => buyHistory.category)
-    buyHistory: BuyHistory[];
+    @ManyToOne(() => Product, (product) => product.categories)
+    product: Product;
+
+
 }

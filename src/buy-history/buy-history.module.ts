@@ -4,7 +4,6 @@ import { BuyHistoryController } from './buy-history.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BuyHistory } from './entities/buy-history.entity';
 import { BankModule } from 'src/bank/bank.module';
-import { Category } from './entities/category';
 
 @Module({
   controllers: [BuyHistoryController],
@@ -12,10 +11,9 @@ import { Category } from './entities/category';
   imports:[
     TypeOrmModule.forFeature([
       BuyHistory,
-      Category,
     ]),
     BankModule,
   ],
-  exports: [BuyHistoryService, TypeOrmModule.forFeature([BuyHistory, Category])],
+  exports: [BuyHistoryService, TypeOrmModule.forFeature([BuyHistory])],
 })
 export class BuyHistoryModule {}

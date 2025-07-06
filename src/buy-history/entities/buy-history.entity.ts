@@ -1,6 +1,5 @@
 import { BankAccount } from "src/bank/entities/bank-account.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Category } from "./category";
 
 
 
@@ -35,12 +34,4 @@ export class BuyHistory {
     @ManyToOne(() => BankAccount, (banckAccount) => banckAccount.buyHistory, {
     })
     banckAccount: BankAccount;
-
-    @Column('text', {
-        nullable: false,
-    })
-    @ManyToOne(() => Category, (category) => category.buyHistory, {
-        eager: true,
-    })
-    category: Category;
 }

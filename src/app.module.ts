@@ -3,6 +3,7 @@ import { BankModule } from './bank/bank.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BuyHistoryModule } from './buy-history/buy-history.module';
+import { ProductModule } from './product/product.module';
 
 
 @Module({
@@ -22,7 +23,8 @@ import { BuyHistoryModule } from './buy-history/buy-history.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
-    BuyHistoryModule,],
+    BuyHistoryModule,
+    ProductModule,],
   controllers: [],
   providers: [],
 })
