@@ -1,16 +1,17 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Category } from "./category";
 
 @Entity({name: 'product'})
 export class Product {
     @PrimaryGeneratedColumn('uuid') 
-    id: number;
+    id: string;
     @Column('text', {
+        unique: true,
         nullable: false,
     })
     name: string;
     @Column('text', {
-        nullable: true,
+        nullable: true
     })
     image: string;
     @Column('text', {
@@ -22,12 +23,16 @@ export class Product {
     })
     price: number;
 
-    @Column('text', {
-        nullable: false,
-    })
-    @OneToMany(() => Category, (category) => category.product, {
-        cascade: true,
-        eager: true,
-    })
-    categories: Category[];
+
+
+  @ManyToMany(() => Category, (category) => category.products, {
+    cascade: true,
+    eager: true,
+  })
+  @JoinTable({
+    name: 'products_categories', // Nombre de la tabla intermedia
+    joinColumn: { name: 'product_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
+  })
+  categories: Category[];
 }

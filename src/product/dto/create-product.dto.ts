@@ -1,11 +1,10 @@
-import { Type } from "class-transformer";
-import { ArrayMinSize, IsArray, IsNumber, IsString, Min, MinLength, ValidateNested } from "class-validator";
-import { CreateCategoryDto } from "./create-category.dto";
+import { ArrayMinSize, IsArray, IsNumber, IsOptional, IsString, Min, MinLength, ValidateNested } from "class-validator";
 
 export class CreateProductDto {
     @IsString()
     @MinLength(1)
     name: string;
+    @IsOptional()
     @IsString()
     @MinLength(1)
     image?: string;
@@ -18,7 +17,7 @@ export class CreateProductDto {
     @IsArray()
     @ArrayMinSize(1)
     @IsString({ each: true })
-    categories: string[];
+    categoriesIds: string[];
     
 
 }
