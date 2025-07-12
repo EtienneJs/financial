@@ -2,13 +2,14 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateCategoryDto } from './dto/create-category.dto';
 
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post('category')
-  createCategory(@Body() createCategoryDto: CreateProductDto) {
+  createCategory(@Body() createCategoryDto: CreateCategoryDto) {
     return this.productService.createCategory(createCategoryDto);
   }
 
@@ -34,7 +35,7 @@ export class ProductController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productService.remove(+id);
+  remove(@Param('id',ParseUUIDPipe) id: string) {
+    return this.productService.removeProduct(id);
   }
 }
