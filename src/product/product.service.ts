@@ -60,7 +60,7 @@ async update(id: string, updateProductDto: UpdateProductDto) {
 
     // 2. Verificar duplicados de nombre
     if (updateProductDto.name) {
-      const existingProduct = await this.productRepository.findOne({ // <-- Corregido repositorio
+      const existingProduct = await this.productRepository.findOne({
         where: { name: updateProductDto.name, id: Not(id) },
       });
       if (existingProduct) {
@@ -135,6 +135,13 @@ async update(id: string, updateProductDto: UpdateProductDto) {
     } catch (error) {
       throw new ConflictException(error.message);
     }
+  }
+
+  async findsByIds(ids: string[]): Promise<Product[]> {
+    const productsFound = await this.productRepository.find({
+      where: { id: In(ids) }
+    });
+    return productsFound;
   }
   
 }

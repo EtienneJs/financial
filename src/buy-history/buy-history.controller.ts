@@ -17,6 +17,11 @@ export class BuyHistoryController {
     return this.buyHistoryService.findOne(+id);
   }
 
+  @Post("")
+  createBuyHistory( @Body() createBuyHistoryDto:CreateBuyHistoryDto ){
+    return this.buyHistoryService.createNewHistoryBuy(createBuyHistoryDto);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateBuyHistoryDto: UpdateBuyHistoryDto) {
     return this.buyHistoryService.update(+id, updateBuyHistoryDto);

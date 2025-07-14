@@ -14,5 +14,8 @@ import { Category } from './entities/category';
           Category
         ]),
   ],
+  exports: [
+    ProductService
+  ]
 })
 export class ProductModule {}

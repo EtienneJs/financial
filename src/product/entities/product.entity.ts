@@ -1,5 +1,6 @@
 import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Category } from "./category";
+import { BuyHistoryDetalle } from "src/buy-history/entities/buy-history-detalle.entity";
 
 @Entity({name: 'product'})
 export class Product {
@@ -30,9 +31,13 @@ export class Product {
     eager: true,
   })
   @JoinTable({
-    name: 'products_categories', // Nombre de la tabla intermedia
+    name: 'products_categories',
     joinColumn: { name: 'product_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
   })
   categories: Category[];
+
+
+  @ManyToMany(() => BuyHistoryDetalle, (buyHistoryDetalle) => buyHistoryDetalle.products)
+  buyHistoryDetalle: BuyHistoryDetalle[];
 }
