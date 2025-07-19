@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
 import { BuyHistoryService } from './buy-history.service';
 import { CreateBuyHistoryDto } from './dto/create-buy-history.dto';
 import { UpdateBuyHistoryDto } from './dto/update-buy-history.dto';
@@ -13,8 +13,8 @@ export class BuyHistoryController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.buyHistoryService.findOne(+id);
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.buyHistoryService.findOne(id);
   }
 
   @Post("")
@@ -23,8 +23,8 @@ export class BuyHistoryController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBuyHistoryDto: UpdateBuyHistoryDto) {
-    return this.buyHistoryService.update(+id, updateBuyHistoryDto);
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateBuyHistoryDto: UpdateBuyHistoryDto) {
+    return this.buyHistoryService.update(id, updateBuyHistoryDto);
   }
 
   @Delete(':id')

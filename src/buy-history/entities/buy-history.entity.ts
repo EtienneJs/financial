@@ -1,6 +1,7 @@
 import { BankAccount } from "src/bank/entities/bank-account.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { BuyHistoryDetalle } from "./buy-history-detalle.entity";
+import { Product } from "src/product/entities/product.entity";
 
 
 

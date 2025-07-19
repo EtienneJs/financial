@@ -130,10 +130,14 @@ export class BankAccountService {
 
     }
 
-    async findOne(id:string):Promise<BankAccount | null>{
+    async findOne(id:string):Promise<BankAccount>{
         const findOneBankAcount = await this.bankAccountRepository.findOne({
             where: {id}
         })
+
+        if(!findOneBankAcount){
+            throw new NotFoundException("Bank Account not exist");
+        }
 
         return findOneBankAcount;
     }

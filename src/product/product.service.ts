@@ -141,6 +141,9 @@ async update(id: string, updateProductDto: UpdateProductDto) {
     const productsFound = await this.productRepository.find({
       where: { id: In(ids) }
     });
+    if(productsFound.length === 0){
+      throw new  ConflictException("Ningun producto se a encontrado");
+    }
     return productsFound;
   }
   
