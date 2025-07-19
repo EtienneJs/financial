@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BuyHistoryModule } from './buy-history/buy-history.module';
 import { ProductModule } from './product/product.module';
+import { ContadorModule } from './contador/contador.module';
 
 
 @Module({
@@ -24,7 +25,8 @@ import { ProductModule } from './product/product.module';
       synchronize: true,
     }),
     BuyHistoryModule,
-    ProductModule,],
+    ProductModule,
+    ContadorModule,],
   controllers: [],
   providers: [],
 })
