@@ -16,12 +16,6 @@ export class Bank {
     })
     image: string;
 
-    @Column ('text', {
-        nullable: true,
-        array: true,
-        default:[]
-    })
-
     @OneToMany(() => BankAccount, (account) => account.bank, {
         cascade: true,
         eager: true,

@@ -1,5 +1,7 @@
 import { BankAccount } from "src/bank/entities/bank-account.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BuyHistoryDetalle } from "./buy-history-detalle.entity";
+import { Product } from "src/product/entities/product.entity";
 
 
 
@@ -10,28 +12,23 @@ export class BuyHistory {
     @Column('text', {
         nullable: false,
     })
-    name: string;
-    @Column('text', {
-        nullable: true,
-    })
-    image: string;
-    @Column('text', {
-        nullable: false,
-    })
     description: string;
     @Column('numeric', {
         nullable: false,
     })
-    price: number;
+    total: number;
     @Column('text', {
         nullable: false,
     })
-    date: string;
+    date: Date;
 
-    @Column('text', {
-        nullable: false,
-    })
     @ManyToOne(() => BankAccount, (banckAccount) => banckAccount.buyHistory, {
     })
     banckAccount: BankAccount;
+
+    @OneToMany(() => BuyHistoryDetalle, (buy_history_detalle) => buy_history_detalle.buyHistory, {
+        cascade: true,
+        eager: true,
+    })
+    buyHistoryDetalle: BuyHistoryDetalle[];
 }

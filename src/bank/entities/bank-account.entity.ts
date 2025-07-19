@@ -33,14 +33,11 @@ export class BankAccount {
 
     @OneToMany(() => Transaction, (transaction) => transaction.accountOrigin, {
         cascade: true,
-        eager: true,
-
     })
     originTransactions: Transaction[];
 
     @OneToMany(() => Transaction, (transaction) => transaction.accountDestiny, {
     cascade: true,
-    eager: true,
     })
     destinyTransactions: Transaction[];
 

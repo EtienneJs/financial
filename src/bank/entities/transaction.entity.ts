@@ -3,8 +3,6 @@ import { BankAccount } from "./bank-account.entity";
 
 @Entity({name: 'transaccion'})
 export class Transaction {
-    // Aquí puedes definir las propiedades de la entidad Transaction
-    // Por ejemplo:
     @PrimaryGeneratedColumn('uuid')
     id: string;
     
