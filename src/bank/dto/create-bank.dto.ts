@@ -1,16 +1,26 @@
-import { ArrayMinSize, IsArray, IsString, Min, MinLength, ValidateNested } from "class-validator";
+import { ArrayMinSize, IsArray, IsOptional, IsString, Min, MinLength, ValidateNested } from "class-validator";
 import { CreateBankAccountDto } from "./create-bank-account.dto";
 import { Type } from "class-transformer";
+import { UniqueTypeAccount } from "../validadorCustom/validador-type-accounts";
+import { IsUniqueConstraint, isUnique } from "../../validatonsGlobals/validator-unique-nro-count";
 
 export class CreateBankDto {
     @IsString()
     @MinLength(6)
+    @isUnique({
+    column:"name",
+    tableName:"banco"
+    })
     name: string;
-    image?: string;
 
+    @IsOptional()
+    @IsString()
+    image?: string;
+    
     @IsArray()
     @ArrayMinSize(1)
-    @ValidateNested({ each: true }) // Valida cada elemento del array
-    @Type(() => CreateBankAccountDto) // Transforma objetos a instancias de la clase
+    @UniqueTypeAccount()
+    @ValidateNested({ each: true })
+    @Type(() => CreateBankAccountDto)
     account: CreateBankAccountDto[];
 }

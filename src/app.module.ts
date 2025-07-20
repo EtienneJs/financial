@@ -6,6 +6,8 @@ import { BuyHistoryModule } from './buy-history/buy-history.module';
 import { ProductModule } from './product/product.module';
 import { ContadorModule } from './contador/contador.module';
 import { TropyModule } from './tropy/tropy.module';
+import { UniqueTypeAccount, UniqueTypeAccountConstraint } from './bank/validadorCustom/validador-type-accounts';
+import { IsUniqueConstraint } from './validatonsGlobals/validator-unique-nro-count';
 
 
 @Module({
@@ -30,6 +32,8 @@ import { TropyModule } from './tropy/tropy.module';
     ContadorModule,
     TropyModule,],
   controllers: [],
-  providers: [],
+  providers: [
+    IsUniqueConstraint
+  ],
 })
 export class AppModule {}

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { BankService } from './bank.service';
 import { BankController } from './bank.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -6,17 +6,21 @@ import { Bank } from './entities/bank.entity';
 import { BankAccount } from './entities/bank-account.entity';
 import { BankAccountService } from './bank-account.service';
 import { Transaction } from './entities/transaction.entity';
-import { BuyHistoryModule } from 'src/buy-history/buy-history.module';
+import { UniqueTypeAccountConstraint } from './validadorCustom/validador-type-accounts';
+import { IsUniqueConstraint } from 'src/validatonsGlobals/validator-unique-nro-count';
 
 
 @Module({
   controllers: [BankController],
-  providers: [BankService, BankAccountService],
+  providers: [BankService, BankAccountService,UniqueTypeAccountConstraint,IsUniqueConstraint
+  
+  ],
   imports:[
         TypeOrmModule.forFeature([
       Bank,
       BankAccount,
-      Transaction
+      Transaction,
+      
     ])
   ], 
   exports: [TypeOrmModule, BankService, BankAccountService]
