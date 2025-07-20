@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BuyHistoryModule } from './buy-history/buy-history.module';
 import { ProductModule } from './product/product.module';
 import { ContadorModule } from './contador/contador.module';
+import { TropyModule } from './tropy/tropy.module';
 
 
 @Module({
@@ -26,7 +27,8 @@ import { ContadorModule } from './contador/contador.module';
     }),
     BuyHistoryModule,
     ProductModule,
-    ContadorModule,],
+    ContadorModule,
+    TropyModule,],
   controllers: [],
   providers: [],
 })

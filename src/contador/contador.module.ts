@@ -12,5 +12,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           Contador
     ])
   ], 
+  exports:[
+    ContadorService
+  ]
 })
 export class ContadorModule {}
