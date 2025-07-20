@@ -12,20 +12,20 @@ import { UUID } from "crypto";
 
 @Injectable()
 export class BankAccountService {
-      constructor(
+    constructor(
         @InjectRepository(BankAccount)
         private readonly bankAccountRepository: Repository<BankAccount>,
         @InjectRepository(Bank)
         private readonly bankRepository: Repository<Bank>,
         @InjectRepository(Transaction)
         private readonly transactionRepository: Repository<Transaction>,
-      ) { }
+    ) { }
 
-      async createAccount(bankId: string, createBankAccountDto: CreateBankAccountDto): Promise<BankAccount | undefined> {
+    async createAccount(bankId: string, createBankAccountDto: CreateBankAccountDto): Promise<BankAccount | undefined> {
         // Verifica si el banco existe
         try {
-            const bank = await this.bankRepository.findOne({ where: { id: bankId }})
-            if(!bank){
+            const bank = await this.bankRepository.findOne({ where: { id: bankId } })
+            if (!bank) {
                 throw new NotFoundException('Banco no encontrado');
             }
             // Verifica si el número de cuenta ya existe
@@ -45,7 +45,7 @@ export class BankAccountService {
                 throw error;
             }
         }
-      }
+    }
     updateAccount(id: string, updateBankAccountDto: UpdateBankAccountDto): Promise<BankAccount | undefined> {
         return this.bankAccountRepository.manager.transaction(async (transactionalEntityManager) => {
             // Verifica si la cuenta bancaria existe
@@ -81,45 +81,46 @@ export class BankAccountService {
     ): Promise<Transaction | undefined> {
         try {
             return this.transactionRepository.manager.transaction(async (transactionalEntityManager) => {
-            const account = await transactionalEntityManager.findOne(BankAccount, { 
-                where: { id },
-            });
-            
-            if (!account) {
-                throw new NotFoundException('Cuenta bancaria no encontrada');
-            }
+                const accountOrigin = await transactionalEntityManager.findOne(BankAccount, { where: { id } });
+                
+                if (!accountOrigin) {
+                    throw new NotFoundException('Cuenta bancaria no encontrada');
+                }
 
-            const accountDestiny = await transactionalEntityManager.findOne(BankAccount, 
-                { where: { id: createTransactionDto.accountDestiny }
-            });
-            if (!accountDestiny) {
-                throw new NotFoundException('Cuenta de destino no encontrada');
-            }
+                const accountDestiny = await transactionalEntityManager.findOne(BankAccount, {
+                    where: { id: createTransactionDto.accountDestiny }
+                });
+                if (!accountDestiny) {
+                    throw new NotFoundException('Cuenta de destino no encontrada');
+                }
 
-            // Crea una nueva transacción
-            const newTransaction = transactionalEntityManager.create(Transaction, {
-                ...createTransactionDto,
-                date: new Date(),
-                accountOrigin: account,
-                accountDestiny: accountDestiny
-            });
+                if (accountOrigin.current_balance < createTransactionDto.amount) {
+                    throw new BadRequestException('Saldo insuficiente en cuenta de origen');
+                }
 
-            transactionalEntityManager.merge(BankAccount, account, {
-                current_balance: account.current_balance - createTransactionDto.amount // Actualiza el saldo de la cuenta
-            });
-            transactionalEntityManager.merge(BankAccount, accountDestiny, {
-                current_balance: accountDestiny.current_balance + createTransactionDto.amount // Actualiza el saldo de la cuenta
-            });
-            // Guarda la transacción y actualiza el saldo de la cuenta
-            return await transactionalEntityManager.transaction(async (transactionalEntityManager) => {
+                // Crear transacción
+                const newTransaction = transactionalEntityManager.create(Transaction, {
+                    ...createTransactionDto,
+                    date: new Date(),
+                    accountOrigin,
+                    accountDestiny
+                });
+
+                // Actualizar balances
+                accountOrigin.current_balance -= createTransactionDto.amount;
+                accountDestiny.current_balance += createTransactionDto.amount;
+
+                // Guardar cambios
                 const savedTransaction = await transactionalEntityManager.save(Transaction, newTransaction);
-                await transactionalEntityManager.save(BankAccount, account);
+                await transactionalEntityManager.save(BankAccount, accountOrigin);
                 await transactionalEntityManager.save(BankAccount, accountDestiny);
-                savedTransaction.accountOrigin.current_balance = account.current_balance; 
+
+                // Adjuntar balances actualizados al resultado
+                savedTransaction.accountOrigin.current_balance = accountOrigin.current_balance;
                 savedTransaction.accountDestiny.current_balance = accountDestiny.current_balance;
-                return savedTransaction;    
-            })
-        });
+
+                return savedTransaction;
+            });
         } catch (error) {
             if (error instanceof NotFoundException || error instanceof ConflictException) {
                 throw error; // Re-lanza el error de cuenta no encontrada o conflicto
@@ -130,12 +131,12 @@ export class BankAccountService {
 
     }
 
-    async findOne(id:string):Promise<BankAccount>{
+    async findOne(id: string): Promise<BankAccount> {
         const findOneBankAcount = await this.bankAccountRepository.findOne({
-            where: {id}
+            where: { id }
         })
 
-        if(!findOneBankAcount){
+        if (!findOneBankAcount) {
             throw new NotFoundException("Bank Account not exist");
         }
 
