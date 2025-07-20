@@ -59,7 +59,7 @@ export class ContadorService {
   async remove(id: string) {
     const findCounterToUpdate = await this.findOne(id);
     if (!findCounterToUpdate) {
-      throw new NotFoundException("COntador no encontrado")
+      throw new NotFoundException("Contador no encontrado")
     }
     return this.counterRepository.delete(id);
   }
