@@ -1,4 +1,5 @@
-import { ArrayMinSize, IsArray, IsDecimal, IsNumber, IsString, IsUUID, Min, MinLength, ValidateNested } from "class-validator";
+import { IsNumber, IsString, IsUUID, MinLength } from "class-validator";
+import { isExist } from "src/validatonsGlobals/validator-exist";
 
 export class CreateTransactionDto {
     @IsString()
@@ -14,5 +15,17 @@ export class CreateTransactionDto {
 
     @IsString()
     @IsUUID()
+    @isExist({
+        column:"id",
+        tableName:"account"
+    })
     accountDestiny: string;
+
+    @IsString()
+    @IsUUID()
+    @isExist({
+        column:"id",
+        tableName:"account"
+    })
+    accountOrigin: string;
 }
