@@ -33,7 +33,7 @@ import { IsUniqueConstraint } from './validatonsGlobals/validator-unique-nro-cou
     TropyModule,],
   controllers: [],
   providers: [
-    IsUniqueConstraint
+    IsUniqueConstraint,
   ],
 })
 export class AppModule {}

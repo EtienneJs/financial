@@ -12,6 +12,7 @@ export class CreateBankAccountDto {
     @IsString()
     @MinLength(3)
     type_account: string;
+    
     @IsNumber()
     @Min(0)
     current_balance: number;

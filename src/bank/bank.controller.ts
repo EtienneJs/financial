@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UsePipes, Inject } from '@nestjs/common';
 import { BankService } from './bank.service';
 import { CreateBankDto } from './dto/create-bank.dto';
 import { UpdateBankDto } from './dto/update-bank.dto';
@@ -6,7 +6,9 @@ import { CreateBankAccountDto } from './dto/create-bank-account.dto';
 import { BankAccountService } from './bank-account.service';
 import { UpdateBankAccountDto } from './dto/update-bank-account.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { DataSource } from 'typeorm';
+import { ExistsBankPipe } from './pipes/validation-exist-bank';
+import { ExistsBankAccountPipe } from './pipes/validation-exist-account';
 
 @Controller('bank')
 export class BankController {
@@ -40,11 +42,9 @@ export class BankController {
   remove(@Param('id',ParseUUIDPipe) id: string) {
     return this.bankService.remove(id);
   }
-
-  // Bank Account Endpoints
   @Post('/create-account/:bankId')
-  createAccount(
-    @Param('bankId', ParseUUIDPipe) bankId: string,
+  async createAccount(
+    @Param('bankId', ParseUUIDPipe,ExistsBankPipe) bankId: string,
     @Body() createBankDto: CreateBankAccountDto
   ) {
     return this.bankAccountService.createAccount(bankId, createBankDto);
@@ -52,7 +52,7 @@ export class BankController {
 
   @Patch('/update-account/:id')
   updateAccount(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseUUIDPipe,ExistsBankAccountPipe) id: string,
     @Body() updateBankDto: UpdateBankAccountDto
   ) {
     return this.bankAccountService.updateAccount(id, updateBankDto);
@@ -61,12 +61,11 @@ export class BankController {
   removeAccount(@Param('id', ParseUUIDPipe) id: string) {
     return this.bankAccountService.removeAccount(id);
   }
-  @Post("/account/:id/transaction")
+  @Post("/account/transaction")
   createTransaction(
-    @Param('id', ParseUUIDPipe) id: string,
     @Body() createTransactionDto: CreateTransactionDto
   ) {
-    return this.bankAccountService.createTransaction(id, createTransactionDto);
+    return this.bankAccountService.createTransaction(createTransactionDto);
   }
 
 }
