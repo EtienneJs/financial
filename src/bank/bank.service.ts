@@ -1,9 +1,10 @@
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Not, Repository } from 'typeorm';
+
 import { CreateBankDto } from './dto/create-bank.dto';
 import { UpdateBankDto } from './dto/update-bank.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Bank } from './entities/bank.entity';
-import { In, Not, Repository } from 'typeorm';
 import { BankAccount } from './entities/bank-account.entity';
 
 @Injectable()
@@ -15,51 +16,78 @@ export class BankService {
     private readonly bankAccountRepository: Repository<BankAccount>,
     @InjectRepository(Bank)
     private readonly bankRepository: Repository<Bank>,
-  ) { }
-  async create(createBankDto: CreateBankDto) {
-    // Inicia transacción
-    return this.bankRepository.manager.transaction(async (transactionalEntityManager) => {
-        // 1. Crea y guarda primero el banco principal
-        const bank = transactionalEntityManager.create(Bank, {
-          name: createBankDto.name,
-          image: createBankDto.image
-        });
-        await transactionalEntityManager.save(Bank, bank);
+  ) {}
 
-        // 2. Si hay cuentas bancarias, procesarlas
+  // ========================================
+  // CRUD Operations
+  // ========================================
+
+  /**
+   * Creates a new bank with associated accounts
+   */
+  async create(createBankDto: CreateBankDto) {
+    return this.bankRepository.manager.transaction(async (transactionalEntityManager) => {
+      // 1. Create and save the main bank
+      const bank = transactionalEntityManager.create(Bank, {
+        name: createBankDto.name,
+        image: createBankDto.image
+      });
+      await transactionalEntityManager.save(Bank, bank);
+
+      // 2. Process bank accounts if provided
+      if (createBankDto.account && createBankDto.account.length > 0) {
         const accounts = createBankDto.account.map(accountDto => {
           return transactionalEntityManager.create(BankAccount, {
             ...accountDto,
-            bank: { id: bank.id } // Asigna la relación con el banco
+            bank: { id: bank.id } // Assign relationship with bank
           });
-        });          
-        // 4. Guardar las cuentas
+        });
+        
+        // 3. Save the accounts
         bank.account = await transactionalEntityManager.save(BankAccount, accounts);
+      }
 
-        return bank;
+      return bank;
     });
   }
 
+  /**
+   * Retrieves all banks
+   */
   findAll() {
     return `This action returns all bank`;
   }
 
+  /**
+   * Retrieves a bank by ID
+   */
   findOne(id: number) {
     return `This action returns a #${id} bank`;
   }
 
+  /**
+   * Updates a bank by ID
+   */
   async update(id: string, updateBankDto: UpdateBankDto) {
     try {
-      const bankExist = await this.bankRepository.findOneBy({ id });
-      if (!bankExist) {
+      // Validate bank exists
+      const bankExists = await this.bankRepository.findOneBy({ id });
+      if (!bankExists) {
         throw new BadRequestException(`Bank with id ${id} not found`);
       }
-      const nameExist = await this.bankRepository.findOne({
-        where: { name:updateBankDto.name, id: Not(id) } // Exclude the current bank by id,
+
+      // Check for name conflicts (excluding current bank)
+      const nameExists = await this.bankRepository.findOne({
+        where: { 
+          name: updateBankDto.name, 
+          id: Not(id) 
+        },
       });
-      if (nameExist) {
-        throw new ConflictException(`Bank with name ${nameExist.name} already exists`); 
+      
+      if (nameExists) {
+        throw new ConflictException(`Bank with name ${nameExists.name} already exists`);
       }
+
       return this.bankRepository.update(id, updateBankDto);
     } catch (error) {
       if (error instanceof ConflictException || error instanceof BadRequestException) {
@@ -69,12 +97,17 @@ export class BankService {
     }
   }
 
+  /**
+   * Removes a bank by ID
+   */
   async remove(id: string) {
     try {
+      // Validate bank exists
       const bank = await this.bankRepository.findOneBy({ id });
       if (!bank) {
         throw new BadRequestException(`Bank with id ${id} not found`);
       }
+
       await this.bankRepository.delete(id);
       return `This action removes a #${id} bank`;
     } catch (error) {
@@ -85,11 +118,18 @@ export class BankService {
     }
   }
 
+  // ========================================
+  // Private Helper Methods
+  // ========================================
 
+  /**
+   * Handles database-specific errors
+   */
   private handleDBErrors(error: any) {
     if (error.code === '23505') {
       throw new BadRequestException(error.detail);
     }
+    
     this.logger.error('Bank already exists', error);
     throw new InternalServerErrorException('Unexpected error, check server logs');
   }
