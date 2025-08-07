@@ -25,7 +25,7 @@ export class BankAccountService {
             const bank = (await this.bankRepository.findOne({ where: { id: bankId } }))!
             const newAccount = this.bankAccountRepository.create({
                 ...createBankAccountDto,
-                bank: bank // Asocia la cuenta con el banco
+                bank: bank
             });
             return await this.bankAccountRepository.save(newAccount);
         } catch (error) {
