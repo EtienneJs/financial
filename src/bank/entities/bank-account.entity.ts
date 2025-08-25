@@ -8,11 +8,11 @@ export class BankAccount {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column('text', {
+    @Column('integer', {
         unique: true,
         nullable: false,
     })
-    nro_account: string;
+    nro_account: number;
 
     @Column('text', {
         nullable: false,
@@ -47,3 +47,5 @@ export class BankAccount {
     })
     buyHistory: BuyHistory[];
 }
+
+
