@@ -10,38 +10,128 @@ import { ProductService } from 'src/product/product.service';
 import { Product } from 'src/product/entities/product.entity';
 import { BankAccount } from 'src/bank/entities/bank-account.entity';
 import { CreateBuyHistoryDetalleDto } from './dto/create-buy-history-detalle.dto';
+
 @Injectable()
 export class BuyHistoryService {
+  constructor(
+    @InjectRepository(BuyHistory)
+    private readonly buyHistoryRepository: Repository<BuyHistory>,
+    @InjectRepository(BuyHistoryDetalle)
+    private readonly bankAccountService: BankAccountService,
+    private readonly productService: ProductService,
+  ) {}
 
-    constructor(
-      @InjectRepository(BuyHistory)
-      private readonly buyHistoryRepository: Repository<BuyHistory>,
-      @InjectRepository(BuyHistoryDetalle)
-      private readonly buyHistoryDetalleRepository: Repository<BuyHistoryDetalle>,
-      
-      private readonly bankAccountService: BankAccountService,
-      private readonly productService: ProductService,
-    ) { }
   findAll() {
     return `This action returns all buyHistory`;
   }
 
-  async findOne(id: string):Promise<BuyHistory> {
+  async findOne(id: string): Promise<BuyHistory> {
     const findBuyHistory = await this.buyHistoryRepository.findOne({
-      where : {id}
-    })
-    if(!findBuyHistory){
-      throw new NotFoundException("History not found")
+      where: { id }
+    });
+    
+    if (!findBuyHistory) {
+      throw new NotFoundException("History not found");
     }
+    
     return findBuyHistory;
   }
 
-async update(id: string, updateBuyHistoryDto: UpdateBuyHistoryDto) {
-  // Iniciamos una transacción para asegurar la atomicidad de todas las operaciones
-  await this.buyHistoryRepository.manager.transaction(async (manager) => {
-    const { bankAcount, description, detailBuy } = updateBuyHistoryDto;
+  async update(id: string, updateBuyHistoryDto: UpdateBuyHistoryDto) {
+    return await this.buyHistoryRepository.manager.transaction(async (manager) => {
+      const { bankAcount, description, detailBuy } = updateBuyHistoryDto;
 
-    // Buscamos la compra existente junto con su cuenta bancaria relacionada
+      // Buscar la compra existente
+      const buyHistory = await this.findBuyHistoryWithRelations(manager, id);
+      
+      // Manejar cambio de cuenta bancaria
+      const { oldAccount, totalDifference } = await this.handleBankAccountChange(
+        manager, 
+        buyHistory, 
+        bankAcount
+      );
+
+      // Actualizar productos si se proporcionan
+      if (detailBuy) {
+        await this.updatePurchaseDetails(manager, buyHistory, detailBuy);
+      }
+
+      // Ajustar saldos en cuentas
+      await this.adjustAccountBalances(
+        manager, 
+        buyHistory, 
+        oldAccount, 
+        totalDifference
+      );
+
+      // Actualizar descripción si se proporciona
+      if (description) {
+        buyHistory.description = description;
+      }
+
+      // Guardar la compra actualizada
+      return await manager.save(BuyHistory, buyHistory);
+    });
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} buyHistory`;
+  }
+
+  async createNewHistoryBuy(createBuyHistoryDto: CreateBuyHistoryDto) {
+    return await this.buyHistoryRepository.manager.transaction(async (transactionalEntityManager) => {
+      const { bankAcount, description, detailBuy } = createBuyHistoryDto;
+
+      // Validar cuenta bancaria
+      const bankAccount = await this.bankAccountService.findOne(bankAcount);
+      if (!bankAccount) {
+        throw new NotFoundException("Cuenta bancaria no encontrada");
+      }
+
+      // Validar productos
+      const foundProducts = await this.validateAndGetProducts(detailBuy);
+
+      // Crear la compra
+      const buyHistory = await this.createBuyHistory(
+        transactionalEntityManager, 
+        bankAccount, 
+        description
+      );
+
+      // Procesar productos y calcular total
+      const { formattedProducts, total } = this.processProductsAndCalculateTotal(
+        detailBuy, 
+        foundProducts
+      );
+
+      // Verificar saldo suficiente
+      this.validateSufficientBalance(bankAccount, total);
+
+      // Crear detalles de la compra
+      await this.createBuyHistoryDetails(
+        transactionalEntityManager, 
+        buyHistory, 
+        formattedProducts
+      );
+
+      // Actualizar total y guardar
+      buyHistory.total = total;
+      await transactionalEntityManager.save(BuyHistory, buyHistory);
+
+      // Actualizar saldo de la cuenta bancaria
+      buyHistory.banckAccount = await this.updateBankAccountBalance(
+        transactionalEntityManager, 
+        bankAccount, 
+        total
+      );
+
+      return buyHistory;
+    });
+  }
+
+  // Métodos privados para mejorar legibilidad
+
+  private async findBuyHistoryWithRelations(manager: any, id: string): Promise<BuyHistory> {
     const buyHistory = await manager.findOne(BuyHistory, {
       where: { id },
       relations: ['banckAccount'],
@@ -51,177 +141,189 @@ async update(id: string, updateBuyHistoryDto: UpdateBuyHistoryDto) {
       throw new NotFoundException('Compra no encontrada');
     }
 
+    return buyHistory;
+  }
+
+  private async handleBankAccountChange(
+    manager: any, 
+    buyHistory: BuyHistory, 
+    newBankAccountId?: string
+  ): Promise<{ oldAccount: BankAccount | null; totalDifference: number }> {
     let oldAccount: BankAccount | null = null;
     let totalDifference = 0;
 
-    // === CAMBIO DE CUENTA BANCARIA ===
-    // Si se proporciona una nueva cuenta, la comparamos con la actual
-    // Si es diferente, la actualizamos y guardamos la antigua para ajustar el saldo después
-    if (bankAcount) {
-      const newAccount = await this.bankAccountService.findOne(bankAcount);
+    if (newBankAccountId) {
+      const newAccount = await this.bankAccountService.findOne(newBankAccountId);
       if (newAccount.id !== buyHistory.banckAccount.id) {
         oldAccount = buyHistory.banckAccount;
         buyHistory.banckAccount = newAccount;
       }
     }
 
-    // === ACTUALIZACIÓN DE PRODUCTOS DE LA COMPRA ===
-    if (detailBuy) {
-      // Validamos que no venga vacío
-      if (!detailBuy.length) {
-        throw new ConflictException("El detalle de compra no puede estar vacío");
-      }
+    return { oldAccount, totalDifference };
+  }
 
-      // Obtenemos los IDs de los productos que se desean registrar
-      const productIds = detailBuy.map(d => d.productId);
-
-      // Consultamos los productos por ID
-      const products = await this.productService.findsByIds(productIds);
-
-      // Verificamos si hay productos no encontrados
-      if (products.length !== productIds.length) {
-        const foundIds = new Set(products.map(p => p.id));
-        const missingIds = detailBuy
-          .filter(item => !foundIds.has(item.productId))
-          .map(item => item.productId);
-
-        throw new ConflictException(`Productos con el id: ${missingIds.join(", ")} no encontrados`);
-      }
-
-      // Formateamos la lista de productos con sus cantidades
-      const formatted = this.formatQuatityProduct(products, detailBuy);
-
-      // Calculamos el nuevo total de la compra
-      const newTotal = formatted.reduce(
-        (sum, { product, quantity }) => sum + (quantity * product.price),
-        0
-      );
-
-      // Si el total cambia, guardamos la diferencia para ajustar saldos
-      if (newTotal !== buyHistory.total) {
-        totalDifference = buyHistory.total - newTotal;
-        buyHistory.total = newTotal;
-      }
-
-      // Eliminamos los detalles anteriores de la compra
-      await manager.delete(BuyHistoryDetalle, { buyHistory: { id: buyHistory.id } });
-
-      // Creamos los nuevos detalles con los productos actualizados
-      const newDetails = formatted.map(({ product, quantity }) => ({
-        buyHistory,
-        product,
-        quantity,
-      }));
-
-      // Guardamos los nuevos detalles y los asociamos a la compra
-      buyHistory.buyHistoryDetalle = await manager.save(BuyHistoryDetalle, newDetails);
+  private async updatePurchaseDetails(
+    manager: any, 
+    buyHistory: BuyHistory, 
+    detailBuy: CreateBuyHistoryDetalleDto[]
+  ): Promise<void> {
+    // Validar que no venga vacío
+    if (!detailBuy.length) {
+      throw new ConflictException("El detalle de compra no puede estar vacío");
     }
 
-    // === AJUSTE DE SALDOS EN CUENTAS ===
-    if (oldAccount) {
-      // Si se cambió de cuenta, devolvemos el total a la cuenta antigua...
-      oldAccount.current_balance += +buyHistory.total;
+    // Obtener productos
+    const productIds = detailBuy.map(d => d.productId);
+    const products = await this.productService.findsByIds(productIds);
 
-      // ...y lo descontamos de la nueva cuenta
+    // Verificar productos encontrados
+    this.validateAllProductsFound(products, productIds);
+
+    // Formatear productos y calcular nuevo total
+    const formatted = this.formatQuantityProduct(products, detailBuy);
+    const newTotal = this.calculateTotalFromProducts(formatted);
+
+    // Actualizar total si cambió
+    if (newTotal !== buyHistory.total) {
+      buyHistory.total = newTotal;
+    }
+
+    // Eliminar detalles anteriores y crear nuevos
+    await manager.delete(BuyHistoryDetalle, { buyHistory: { id: buyHistory.id } });
+    
+    const newDetails = formatted.map(({ product, quantity }) => ({
+      buyHistory,
+      product,
+      quantity,
+    }));
+
+    buyHistory.buyHistoryDetalle = await manager.save(BuyHistoryDetalle, newDetails);
+  }
+
+  private async adjustAccountBalances(
+    manager: any, 
+    buyHistory: BuyHistory, 
+    oldAccount: BankAccount | null, 
+    totalDifference: number
+  ): Promise<void> {
+    if (oldAccount) {
+      // Si se cambió de cuenta, devolver total a cuenta antigua y descontar de nueva
+      oldAccount.current_balance += +buyHistory.total;
       buyHistory.banckAccount.current_balance -= buyHistory.total;
 
       await manager.save(BankAccount, oldAccount);
       await manager.save(BankAccount, buyHistory.banckAccount);
     } else if (totalDifference !== 0) {
-      // Si no cambió de cuenta pero cambió el total, solo ajustamos el saldo de la cuenta actual
+      // Si no cambió de cuenta pero cambió el total, ajustar saldo
       buyHistory.banckAccount.current_balance += totalDifference;
       await manager.save(BankAccount, buyHistory.banckAccount);
     }
+  }
 
-    // === ACTUALIZACIÓN DE DESCRIPCIÓN ===
-    if (description) {
-      buyHistory.description = description;
+  private async validateAndGetProducts(detailBuy: CreateBuyHistoryDetalleDto[]): Promise<Product[]> {
+    const productIds = detailBuy.map(detail => detail.productId);
+    const foundProducts = await this.productService.findsByIds(productIds);
+
+    if (!foundProducts || foundProducts.length !== productIds.length) {
+      const foundIds = new Set(foundProducts.map(p => p.id));
+      const missingIds = detailBuy
+        .filter(item => !foundIds.has(item.productId))
+        .map(item => item.productId);
+
+      throw new ConflictException(`Productos con el id: ${missingIds.join(", ")} no encontrados`);
     }
 
-    // Guardamos la entidad de la compra actualizada
-    await manager.save(BuyHistory, buyHistory);
-
-    // Retornamos la compra modificada
-    return buyHistory;
-  });
-}
-
-  remove(id: number) {
-    return `This action removes a #${id} buyHistory`;
+    return foundProducts;
   }
 
-  async createNewHistoryBuy(createBuyHistoryDto:CreateBuyHistoryDto){
-      return this.buyHistoryRepository.manager.transaction(async (transactionalEntityManager) => {
-        const { bankAcount, description, detailBuy } = createBuyHistoryDto;
+  private async createBuyHistory(
+    manager: any, 
+    bankAccount: BankAccount, 
+    description: string
+  ): Promise<BuyHistory> {
+    const buyHistory = manager.create(BuyHistory, {
+      banckAccount: bankAccount,
+      date: new Date(),
+      description,
+      total: 0,
+    });
 
-        // Validar cuenta bancaria
-        const banckAccount = await this.bankAccountService.findOne(bankAcount);
-        if (!banckAccount) {
-          throw new NotFoundException("Cuenta bancaria no encontrada");
-        }
-
-        // Validar productos
-        const productIds = detailBuy.map(detail => detail.productId);
-        const foundProducts = await this.productService.findsByIds(productIds);
-
-        if (!foundProducts || foundProducts.length !== productIds.length) {
-          const foundIds = new Set(foundProducts.map(p => p.id));
-          const missingIds = detailBuy
-            .filter(item => !foundIds.has(item.productId))
-            .map(item => item.productId);
-
-          throw new ConflictException(`Productos con el id: ${missingIds.join(", ")} no encontrados`);
-        }
-
-        // Crear BuyHistory
-        const buyHistory = transactionalEntityManager.create(BuyHistory, {
-         banckAccount: banckAccount,
-          date: new Date(),
-          description,
-          total: 0,
-        });
-
-        await transactionalEntityManager.save(BuyHistory, buyHistory);
-
-        let total = 0;
-
-        const formattedProducts = detailBuy.map(detail => {
-          const product = foundProducts.find(p => p.id === detail.productId)!;
-          total += detail.quantity * product.price;
-          return { product, quantity: detail.quantity };
-        });
-
-        if((banckAccount.current_balance - total) <= 0){
-          throw new ConflictException("Saldo insuficiente LMAO")
-        }
-        const buyHistoryDetail = formattedProducts.map(({ product, quantity }) =>
-          transactionalEntityManager.create(BuyHistoryDetalle, {
-            quantity,
-            products: product,
-            buyHistory,
-          })
-        );
-        buyHistory.buyHistoryDetalle  = await transactionalEntityManager.save(BuyHistoryDetalle, buyHistoryDetail);
-        buyHistory.total = total;
-
-        await transactionalEntityManager.save(BuyHistory, buyHistory);
-
-
-        // actualizar saldo OwO
-
-
-        buyHistory.banckAccount = await transactionalEntityManager.save(BankAccount, {
-          ...banckAccount,
-          current_balance: banckAccount.current_balance - total
-        });
-        return buyHistory;
-      });
+    return await manager.save(BuyHistory, buyHistory);
   }
 
-  formatQuatityProduct(products:Product[], detailBuy:CreateBuyHistoryDetalleDto[]):{product:Product, quantity:number}[]{
+  private processProductsAndCalculateTotal(
+    detailBuy: CreateBuyHistoryDetalleDto[], 
+    foundProducts: Product[]
+  ): { formattedProducts: { product: Product; quantity: number }[]; total: number } {
+    let total = 0;
+
+    const formattedProducts = detailBuy.map(detail => {
+      const product = foundProducts.find(p => p.id === detail.productId)!;
+      total += detail.quantity * product.price;
+      return { product, quantity: detail.quantity };
+    });
+
+    return { formattedProducts, total };
+  }
+
+  private validateSufficientBalance(bankAccount: BankAccount, total: number): void {
+    if ((bankAccount.current_balance - total) <= 0) {
+      throw new ConflictException("Saldo insuficiente LMAO");
+    }
+  }
+
+  private async createBuyHistoryDetails(
+    manager: any, 
+    buyHistory: BuyHistory, 
+    formattedProducts: { product: Product; quantity: number }[]
+  ): Promise<void> {
+    const buyHistoryDetail = formattedProducts.map(({ product, quantity }) =>
+      manager.create(BuyHistoryDetalle, {
+        quantity,
+        products: product,
+        buyHistory,
+      })
+    );
+
+    buyHistory.buyHistoryDetalle = await manager.save(BuyHistoryDetalle, buyHistoryDetail);
+  }
+
+  private async updateBankAccountBalance(
+    manager: any, 
+    bankAccount: BankAccount, 
+    total: number
+  ): Promise<BankAccount> {
+    return await manager.save(BankAccount, {
+      ...bankAccount,
+      current_balance: bankAccount.current_balance - total
+    });
+  }
+
+  private validateAllProductsFound(products: Product[], productIds: string[]): void {
+    if (products.length !== productIds.length) {
+      const foundIds = new Set(products.map(p => p.id));
+      const missingIds = productIds.filter(id => !foundIds.has(id));
+      throw new ConflictException(`Productos con el id: ${missingIds.join(", ")} no encontrados`);
+    }
+  }
+
+  private calculateTotalFromProducts(
+    formattedProducts: { product: Product; quantity: number }[]
+  ): number {
+    return formattedProducts.reduce(
+      (sum, { product, quantity }) => sum + (quantity * product.price),
+      0
+    );
+  }
+
+  formatQuantityProduct(
+    products: Product[], 
+    detailBuy: CreateBuyHistoryDetalleDto[]
+  ): { product: Product; quantity: number }[] {
     return detailBuy.map(detail => {
-          const product = products.find(p => p.id === detail.productId)!;
-          return { product, quantity: detail.quantity };
-    })
+      const product = products.find(p => p.id === detail.productId)!;
+      return { product, quantity: detail.quantity };
+    });
   }
 }

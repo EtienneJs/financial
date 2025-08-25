@@ -2,13 +2,13 @@ import { IsNumber, IsString, Min, MinLength } from "class-validator";
 import { isUnique } from "src/validatonsGlobals/validator-unique-nro-count";
 
 export class CreateBankAccountDto {
-    @IsString()
-    @MinLength(6)
+    @Min(6)
     @isUnique({
         column:"nro_account",
-        tableName:"account"
+        tableName:"account",
+        type:"number"
     })
-    nro_account: string;
+    nro_account: number;
     @IsString()
     @MinLength(3)
     type_account: string;
