@@ -33,6 +33,7 @@ export type IsUniqeInterface = {
                 );
                 return result.length === 0;
             } catch (error) {
+                console.log(error);
                 return false;
             }
         }
@@ -40,9 +41,12 @@ export type IsUniqeInterface = {
     defaultMessage(validationArguments?: ValidationArguments): string {
         const {type}: IsUniqeInterface = validationArguments?.constraints[0];
         const value = validationArguments?.value;
-        console.log(type, typeof value);
         if(type && typeof value !== type){
             return `${validationArguments?.property} is not a valid ${type}`
+        } else if(value.toString().length > 10){
+            return `exceeds the maximum length of 10 characters`
+        } else if(value.toString().length < 6){
+            return `minimum length of 6 characters`
         }
         const field: string = validationArguments?.property ?? "sadas"
         return `${field} is already exist`
