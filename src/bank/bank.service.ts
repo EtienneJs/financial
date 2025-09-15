@@ -13,8 +13,6 @@ export class BankService {
   private readonly logger = new Logger(BankService.name);
 
   constructor(
-    @InjectRepository(BankAccount)
-    private readonly bankAccountRepository: Repository<BankAccount>,
     @InjectRepository(Bank)
     private readonly bankRepository: Repository<Bank>,
     private readonly bankResponse: BankResponse,
@@ -36,8 +34,7 @@ export class BankService {
       });
       await transactionalEntityManager.save(Bank, bank);
 
-      // 2. Process bank accounts if provided
-      if (createBankDto.account && createBankDto.account.length > 0) {
+      if (createBankDto.account && createBankDto.account.length > 0 && typeof createBankDto.account === 'object') {
         const accounts = createBankDto.account.map(accountDto => {
           return transactionalEntityManager.create(BankAccount, {
             ...accountDto,
@@ -48,8 +45,11 @@ export class BankService {
         // 3. Save the accounts
         bank.account = await transactionalEntityManager.save(BankAccount, accounts);
       }
-
-      return bank;
+      
+      return {
+        statusCode: 201,
+        message: 'Bank created successfully'
+      };
     });
   }
 

@@ -11,7 +11,8 @@ import { DataSource } from 'typeorm';
 // decorator options interface
 export type IsUniqeInterface = {
     tableName: string,
-    column: string
+    column: string,
+    type?: string
 }
 
 @ValidatorConstraint({ name:"IsUniqueConstraint",async: true })
@@ -23,17 +24,26 @@ export type IsUniqeInterface = {
         args?: ValidationArguments
         ): Promise<boolean> {
             // catch options from decorator
-            const {tableName, column}: IsUniqeInterface = args?.constraints[0];
-            // database query check data is exists
-            const result = await this.dataSource.query(
-            `SELECT 1 FROM ${tableName} WHERE ${column} = $1 LIMIT 1`,
-            [value]
-            );
-            return result.length === 0;
+            const {tableName, column, type}: IsUniqeInterface = args?.constraints[0];
+            try {
+                // database query check data is exists
+                const result = await this.dataSource.query(
+                `SELECT 1 FROM ${tableName} WHERE ${column} = $1 LIMIT 1`,
+                [value]
+                );
+                return result.length === 0;
+            } catch (error) {
+                return false;
+            }
         }
 
     defaultMessage(validationArguments?: ValidationArguments): string {
-        // return custom field message
+        const {type}: IsUniqeInterface = validationArguments?.constraints[0];
+        const value = validationArguments?.value;
+        console.log(type, typeof value);
+        if(type && typeof value !== type){
+            return `${validationArguments?.property} is not a valid ${type}`
+        }
         const field: string = validationArguments?.property ?? "sadas"
         return `${field} is already exist`
     }
