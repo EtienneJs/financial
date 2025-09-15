@@ -1,11 +1,12 @@
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Not, Repository } from 'typeorm';
+import { In, Like, Not, Repository } from 'typeorm';
 
 import { CreateBankDto } from './dto/create-bank.dto';
 import { UpdateBankDto } from './dto/update-bank.dto';
 import { Bank } from './entities/bank.entity';
 import { BankAccount } from './entities/bank-account.entity';
+import { BankResponse } from './mappers/bankAllresponse';
 
 @Injectable()
 export class BankService {
@@ -16,6 +17,7 @@ export class BankService {
     private readonly bankAccountRepository: Repository<BankAccount>,
     @InjectRepository(Bank)
     private readonly bankRepository: Repository<Bank>,
+    private readonly bankResponse: BankResponse,
   ) {}
 
   // ========================================
@@ -54,14 +56,19 @@ export class BankService {
   /**
    * Retrieves all banks
    */
-  findAll() {
-    return `This action returns all bank`;
+  async findAll( name: string ) {
+    const banks = await this.bankRepository.find({
+      where: name
+        ? { name: Like(`%${name}%`) }
+        : {},
+    });
+    return this.bankResponse.allbanks(banks);
   }
 
   /**
    * Retrieves a bank by ID
    */
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} bank`;
   }
 

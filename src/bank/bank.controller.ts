@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UsePipes, Inject } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UsePipes, Inject, Query } from '@nestjs/common';
 import { BankService } from './bank.service';
 import { CreateBankDto } from './dto/create-bank.dto';
 import { UpdateBankDto } from './dto/update-bank.dto';
@@ -24,13 +24,13 @@ export class BankController {
   }
 
   @Get()
-  findAll() {
-    return this.bankService.findAll();
+  findAll(@Query('name') name: string) {
+    return this.bankService.findAll(name);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.bankService.findOne(+id);
+  findOne(@Param('id',ParseUUIDPipe) id: string) {
+    return this.bankService.findOne(id);
   }
 
   @Patch(':id')

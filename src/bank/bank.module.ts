@@ -11,20 +11,18 @@ import { IsUniqueConstraint } from 'src/validatonsGlobals/validator-unique-nro-c
 import { IsExistConstraint } from 'src/validatonsGlobals/validator-exist';
 import { ExistsBankPipe } from './pipes/validation-exist-bank';
 import { ExistsBankAccountPipe } from './pipes/validation-exist-account';
+import { BankResponse } from './mappers/bankAllresponse';
 
 
 @Module({
   controllers: [BankController],
-  providers: [BankService, BankAccountService,UniqueTypeAccountConstraint,IsUniqueConstraint,IsExistConstraint,ExistsBankPipe, ExistsBankAccountPipe
-  
-  ],
+  providers: [BankResponse,BankService, BankAccountService,UniqueTypeAccountConstraint,IsUniqueConstraint,IsExistConstraint,ExistsBankPipe, ExistsBankAccountPipe],
   imports:[
         TypeOrmModule.forFeature([
       Bank,
       BankAccount,
-      Transaction,
-      
-    ])
+      Transaction
+    ]),
   ], 
   exports: [TypeOrmModule, BankService, BankAccountService]
 })
