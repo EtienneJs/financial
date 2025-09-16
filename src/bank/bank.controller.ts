@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UsePipes, Inject, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UsePipes, Inject, Query, ValidationPipe } from '@nestjs/common';
 import { BankService } from './bank.service';
 import { CreateBankDto } from './dto/create-bank.dto';
 import { UpdateBankDto } from './dto/update-bank.dto';
@@ -6,7 +6,6 @@ import { CreateBankAccountDto } from './dto/create-bank-account.dto';
 import { BankAccountService } from './bank-account.service';
 import { UpdateBankAccountDto } from './dto/update-bank-account.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { DataSource } from 'typeorm';
 import { ExistsBankPipe } from './pipes/validation-exist-bank';
 import { ExistsBankAccountPipe } from './pipes/validation-exist-account';
 
@@ -19,6 +18,10 @@ export class BankController {
 
   // Bank Endpoints
   @Post()
+  @UsePipes(
+    new ValidationPipe({ groups: ['base'], validateCustomDecorators: true }),
+    new ValidationPipe({ groups: ['db'], validateCustomDecorators: true }),
+  )
   create(@Body() createBankDto: CreateBankDto) {
     return this.bankService.create(createBankDto);
   }
@@ -43,6 +46,10 @@ export class BankController {
     return this.bankService.remove(id);
   }
   @Post('/create-account/:bankId')
+  @UsePipes(
+    new ValidationPipe({ groups: ['base'], validateCustomDecorators: true }),
+    new ValidationPipe({ groups: ['db'], validateCustomDecorators: true }),
+  )
   async createAccount(
     @Param('bankId', ParseUUIDPipe,ExistsBankPipe) bankId: string,
     @Body() createBankDto: CreateBankAccountDto

@@ -23,31 +23,24 @@ export type IsUniqeInterface = {
         value: any,
         args?: ValidationArguments
         ): Promise<boolean> {
-            // catch options from decorator
             const {tableName, column, type}: IsUniqeInterface = args?.constraints[0];
             try {
-                // database query check data is exists
+                const casted = type === 'number' ? Number(value) : value;
+                const table = `"${tableName}"`;
+                const col = `"${column}"`;
                 const result = await this.dataSource.query(
-                `SELECT 1 FROM ${tableName} WHERE ${column} = $1 LIMIT 1`,
-                [value]
+                    `SELECT 1 FROM ${table} WHERE ${col} = $1 LIMIT 1`,
+                    [casted]
                 );
+                console.log({result});
                 return result.length === 0;
             } catch (error) {
-                console.log(error);
+                console.log({error});
                 return false;
             }
         }
 
     defaultMessage(validationArguments?: ValidationArguments): string {
-        const {type}: IsUniqeInterface = validationArguments?.constraints[0];
-        const value = validationArguments?.value;
-        if(type && typeof value !== type){
-            return `${validationArguments?.property} is not a valid ${type}`
-        } else if(value.toString().length > 10){
-            return `exceeds the maximum length of 10 characters`
-        } else if(value.toString().length < 6){
-            return `minimum length of 6 characters`
-        }
         const field: string = validationArguments?.property ?? "sadas"
         return `${field} is already exist`
     }

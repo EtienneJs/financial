@@ -9,7 +9,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
     app.useGlobalPipes(
     new ValidationPipe({
-      transform:true
+      transform:true,
+      groups: ['base'],
+      validateCustomDecorators: true
     }),
   );
   await app.listen(process.env.PORT ?? 3000);

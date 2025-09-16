@@ -2,7 +2,6 @@ import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "ty
 import { Bank } from "../../bank/entities/bank.entity";
 import { Transaction } from "./transaction.entity";
 import { BuyHistory } from "src/buy-history/entities/buy-history.entity";
-import { Max, Min } from "class-validator";
 
 @Entity({name: 'account'})
 export class BankAccount {
