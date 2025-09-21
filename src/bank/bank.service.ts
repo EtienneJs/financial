@@ -77,24 +77,6 @@ export class BankService {
    */
   async update(id: string, updateBankDto: UpdateBankDto) {
     try {
-      // Validate bank exists
-      const bankExists = await this.bankRepository.findOneBy({ id });
-      if (!bankExists) {
-        throw new BadRequestException(`Bank with id ${id} not found`);
-      }
-
-      // Check for name conflicts (excluding current bank)
-      const nameExists = await this.bankRepository.findOne({
-        where: { 
-          name: updateBankDto.name, 
-          id: Not(id) 
-        },
-      });
-      
-      if (nameExists) {
-        throw new ConflictException(`Bank with name ${nameExists.name} already exists`);
-      }
-
       return this.bankRepository.update(id, updateBankDto);
     } catch (error) {
       if (error instanceof ConflictException || error instanceof BadRequestException) {

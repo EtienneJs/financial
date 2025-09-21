@@ -9,7 +9,8 @@ export class CreateBankDto {
     @MinLength(6, { groups: ['base'] })
     @isUnique({
     column:"name",
-    tableName:"banco"
+    tableName:"banco",
+    query:"INSERT"
     }, { groups: ['db'] })
     name: string;
 

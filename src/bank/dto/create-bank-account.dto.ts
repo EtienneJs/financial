@@ -10,7 +10,8 @@ export class CreateBankAccountDto {
     @isUnique({
         column:"nro_account",
         tableName:"account",
-        type:"number"
+        type:"number",
+        query:"INSERT"
     }, { groups: ['db'] })
     nro_account: number;
 

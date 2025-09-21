@@ -11,8 +11,8 @@ interface IsUniqueArrayValueInterface {
   field: string[];
 }
 
-@ValidatorConstraint({ name:"uniqueTypeAccountConstraint",async: false })
- export class UniqueTypeAccountConstraint implements ValidatorConstraintInterface {
+@ValidatorConstraint({ name:"UniqueFields",async: false })
+ export class UniqueFields implements ValidatorConstraintInterface {
   validate(accounts: CreateBankAccountDto[], args: ValidationArguments) {
     const {field}: IsUniqueArrayValueInterface = args?.constraints[0];
     let isUnique = true;
@@ -37,7 +37,7 @@ export function UniqueTypeAccount(options: IsUniqueArrayValueInterface,validatio
       propertyName: propertyName,
       options: validationOptions,
       constraints: [options],
-      validator: UniqueTypeAccountConstraint,
+      validator: UniqueFields,
     });
   };
 }

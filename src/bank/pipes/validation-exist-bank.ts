@@ -16,7 +16,7 @@ export class ExistsBankPipe implements PipeTransform {
     const bank = await repo.findOne({ where: { id: value } });
 
     if (!bank) {
-      throw new NotFoundException(`Banco con ID ${value} no existe`);
+      throw new NotFoundException(`Banco no existe`);
     }
 
     return value;

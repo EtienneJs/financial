@@ -12,7 +12,8 @@ import { DataSource } from 'typeorm';
 export type IsUniqeInterface = {
     tableName: string,
     column: string,
-    type?: string
+    type?: string,
+    query: "INSERT" | "UPDATE"
 }
 
 @ValidatorConstraint({ name:"IsUniqueConstraint",async: true })
@@ -23,17 +24,19 @@ export type IsUniqeInterface = {
         value: any,
         args?: ValidationArguments
         ): Promise<boolean> {
-            const {tableName, column, type}: IsUniqeInterface = args?.constraints[0];
+            const {tableName, column, type, query}: IsUniqeInterface = args?.constraints[0];
+
             try {
                 const casted = type === 'number' ? Number(value) : value;
                 const table = `"${tableName}"`;
                 const col = `"${column}"`;
+                const validation = query === "UPDATE" ? 1 : 0;
+                const limit = query === "UPDATE" ? 2 : 1;
                 const result = await this.dataSource.query(
-                    `SELECT 1 FROM ${table} WHERE ${col} = $1 LIMIT 1`,
+                    `SELECT 1 FROM ${table} WHERE ${col} = $1  LIMIT ${limit}`,
                     [casted]
                 );
-                console.log({result});
-                return result.length === 0;
+                return result.length <= validation;
             } catch (error) {
                 console.log({error});
                 return false;

@@ -37,13 +37,25 @@ export class BankController {
   }
 
   @Patch(':id')
-  update(@Param('id',ParseUUIDPipe) id: string, @Body() updateBankDto: UpdateBankDto) {
-    return this.bankService.update(id, updateBankDto);
+  @UsePipes(
+    new ValidationPipe({ groups: ['base'], validateCustomDecorators: true }),
+    new ValidationPipe({ groups: ['db'], validateCustomDecorators: true }),
+  )
+  update(@Param('id',ParseUUIDPipe,ExistsBankPipe) id: string, @Body() updateBankDto: UpdateBankDto) {
+    this.bankService.update(id, updateBankDto);
+    return {
+      status: 200,
+      message: 'Bank updated successfully'
+    };
   }
 
   @Delete(':id')
   remove(@Param('id',ParseUUIDPipe) id: string) {
-    return this.bankService.remove(id);
+    this.bankService.remove(id);
+    return {
+      status: 200,
+      message: 'Bank deleted successfully'
+    };
   }
   @Post('/create-account/:bankId')
   @UsePipes(
