@@ -20,7 +20,7 @@ export class CreateBankDto {
     
     @UniqueTypeAccount({ field: ['type_account', 'nro_account'] }, { groups: ['base'] })
     @ArrayMinSize(1, { message: 'account must have at least one element', groups: ['base'] })
-    @ValidateNested({ each: true, groups: ['base'] })
+    @ValidateNested({ each: true, groups: ['db'] })
     @Type(() => CreateBankAccountDto)
     account: CreateBankAccountDto[];
 }

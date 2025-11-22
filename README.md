@@ -1,203 +1,300 @@
 # Financial Management System
 
-A comprehensive financial management system built with NestJS, featuring bank account management, product tracking, purchase history, and trophy system.
+Sistema integral de gestión financiera construido con NestJS, que incluye gestión de bancos y cuentas bancarias, seguimiento de productos, historial de compras y sistema de trofeos.
 
-## 🚀 Features
+## 🚀 Características
 
-- **Bank Management**: Complete bank account management system
-- **Product Management**: Product catalog and inventory tracking
-- **Purchase History**: Detailed transaction and purchase history tracking
-- **Trophy System**: Achievement and reward system
-- **Contador Module**: Counter and statistics functionality
-- **RESTful API**: Full REST API with validation and error handling
-- **Database Integration**: PostgreSQL database with TypeORM
-- **Docker Support**: Containerized development environment
+- **Gestión de Bancos**: Sistema completo de gestión de bancos y cuentas bancarias
+  - Creación y gestión de bancos con múltiples cuentas
+  - Gestión de cuentas bancarias con diferentes tipos
+  - Sistema de transacciones entre cuentas
+  - Validación de existencia y unicidad de datos
+- **Gestión de Productos**: Catálogo de productos e inventario
+  - Gestión de productos con categorías
+  - Control de inventario
+- **Historial de Compras**: Seguimiento detallado de transacciones y compras
+  - Registro de compras con detalles
+  - Relación con cuentas bancarias
+- **Sistema de Trofeos**: Sistema de logros y recompensas
+- **Módulo Contador**: Funcionalidad de contadores y estadísticas
+- **API RESTful**: API REST completa con validación y manejo de errores
+- **Validación por Grupos**: Sistema de validación en dos fases (base y base de datos)
+- **Integración con Base de Datos**: PostgreSQL con TypeORM
+- **Soporte Docker**: Entorno de desarrollo containerizado
 
-## 🛠️ Tech Stack
+## 🛠️ Stack Tecnológico
 
-- **Backend Framework**: NestJS 11.x
-- **Language**: TypeScript
-- **Database**: PostgreSQL 15.1
-- **ORM**: TypeORM
-- **Validation**: class-validator, class-transformer
-- **Containerization**: Docker & Docker Compose
-- **Package Manager**: Yarn
+- **Framework Backend**: NestJS 11.x
+- **Lenguaje**: TypeScript 5.7.3
+- **Base de Datos**: PostgreSQL 15.1
+- **ORM**: TypeORM 0.3.24
+- **Validación**: class-validator, class-transformer
+- **Containerización**: Docker & Docker Compose
+- **Gestor de Paquetes**: Yarn
+- **Testing**: Jest
+- **Linting**: ESLint con Prettier
 
-## 📋 Prerequisites
+## 📋 Prerrequisitos
 
-- Node.js (v18 or higher)
-- Yarn package manager
-- Docker and Docker Compose
-- PostgreSQL (if running locally)
+- Node.js (v18 o superior)
+- Yarn como gestor de paquetes
+- Docker y Docker Compose
+- PostgreSQL (si se ejecuta localmente sin Docker)
 
-## 🚀 Installation
+## 🚀 Instalación
 
-1. **Clone the repository**
+1. **Clonar el repositorio**
    ```bash
    git clone <repository-url>
    cd financial
    ```
 
-2. **Install dependencies**
+2. **Instalar dependencias**
    ```bash
    yarn install
    ```
 
-3. **Environment Setup**
+3. **Configuración del entorno**
    ```bash
    cp .env-example .env
    ```
    
-   Edit the `.env` file with your configuration:
+   Edita el archivo `.env` con tu configuración:
    ```env
-   DB_PASSWORD=your_password
+   DB_PASSWORD=tu_contraseña
    DB_NAME=financial_db
    DB_HOST=localhost
    DB_PORT=5432
-   DB_USERNAME=your_username
-   JWT_SECRET=your_jwt_secret
+   DB_USERNAME=tu_usuario
+   JWT_SECRET=tu_secreto_jwt
    PORT=3000
    HOST_API=http://localhost:3000
    ```
 
-4. **Start the database**
+4. **Iniciar la base de datos**
    ```bash
    docker-compose up -d
    ```
 
-5. **Run the application**
+5. **Ejecutar la aplicación**
 
-   **Development mode:**
+   **Modo desarrollo:**
    ```bash
    yarn start:dev
    ```
 
-   **Production mode:**
+   **Modo producción:**
    ```bash
    yarn build
    yarn start:prod
    ```
 
-## 📁 Project Structure
+## 📁 Estructura del Proyecto
 
 ```
 src/
-├── bank/                 # Bank account management
-│   ├── entities/        # Bank-related entities
-│   ├── dto/            # Data transfer objects
-│   ├── pipes/          # Custom pipes
-│   └── validadorCustom/ # Custom validators
-├── buy-history/         # Purchase history management
-│   ├── entities/        # History entities
-│   └── dto/            # History DTOs
-├── product/            # Product management
-│   ├── entities/       # Product entities
-│   └── dto/           # Product DTOs
-├── contador/           # Counter functionality
-├── tropy/              # Trophy/achievement system
-├── validatonsGlobals/  # Global validation rules
-├── helpers/            # Utility functions
-├── app.module.ts       # Main application module
-└── main.ts            # Application entry point
+├── bank/                    # Gestión de bancos y cuentas
+│   ├── entities/           # Entidades: Bank, BankAccount, Transaction
+│   ├── dto/                # DTOs: create, update para bancos y cuentas
+│   ├── pipes/              # Pipes personalizados de validación
+│   ├── mappers/            # Mappers para transformación de datos
+│   └── validadorCustom/    # Validadores personalizados
+├── buy-history/            # Gestión de historial de compras
+│   ├── entities/           # Entidades: BuyHistory, BuyHistoryDetalle
+│   └── dto/                # DTOs para historial de compras
+├── product/                # Gestión de productos
+│   ├── entities/           # Entidades: Product, Category
+│   └── dto/                # DTOs para productos y categorías
+├── contador/               # Funcionalidad de contadores
+│   ├── entities/           # Entidad Contador
+│   └── dto/                # DTOs para contadores
+├── tropy/                  # Sistema de trofeos/logros
+│   ├── entities/           # Entidad Tropy
+│   └── dto/                # DTOs para trofeos
+├── validatonsGlobals/      # Validadores globales reutilizables
+│   ├── validator-exist.ts  # Validador de existencia
+│   └── validator-unique-nro-count.ts  # Validador de unicidad
+├── interfaces/             # Interfaces compartidas
+│   └── response.ts         # Interfaz de respuesta estándar
+├── app.module.ts           # Módulo principal de la aplicación
+└── main.ts                 # Punto de entrada de la aplicación
 ```
 
-## 🔧 Available Scripts
+## 🔧 Scripts Disponibles
 
-- `yarn start` - Start the application
-- `yarn start:dev` - Start in development mode with hot reload
-- `yarn start:debug` - Start in debug mode
-- `yarn start:prod` - Start in production mode
-- `yarn build` - Build the application
-- `yarn test` - Run tests
-- `yarn test:watch` - Run tests in watch mode
-- `yarn test:cov` - Run tests with coverage
-- `yarn lint` - Run ESLint
-- `yarn format` - Format code with Prettier
+- `yarn start` - Iniciar la aplicación
+- `yarn start:dev` - Iniciar en modo desarrollo con hot reload
+- `yarn start:debug` - Iniciar en modo debug
+- `yarn start:prod` - Iniciar en modo producción
+- `yarn build` - Compilar la aplicación
+- `yarn test` - Ejecutar tests
+- `yarn test:watch` - Ejecutar tests en modo watch
+- `yarn test:cov` - Ejecutar tests con cobertura
+- `yarn test:debug` - Ejecutar tests en modo debug
+- `yarn test:e2e` - Ejecutar tests end-to-end
+- `yarn lint` - Ejecutar ESLint
+- `yarn format` - Formatear código con Prettier
 
-## 🌐 API Endpoints
+## 🌐 Endpoints de la API
 
-The API is available at `http://localhost:3000/api` with the following main modules:
+La API está disponible en `http://localhost:3000/api` con los siguientes módulos principales:
 
-- **Bank**: `/api/bank/*` - Bank account operations
-- **Products**: `/api/product/*` - Product management
-- **Buy History**: `/api/buy-history/*` - Purchase history
-- **Contador**: `/api/contador/*` - Counter operations
-- **Trophy**: `/api/tropy/*` - Trophy system
+### Banco (`/api/bank`)
+- `POST /api/bank` - Crear un nuevo banco
+- `GET /api/bank` - Listar todos los bancos (con filtro opcional por nombre)
+- `GET /api/bank/:id` - Obtener un banco por ID
+- `PATCH /api/bank/:id` - Actualizar un banco
+- `DELETE /api/bank/:id` - Eliminar un banco
+- `POST /api/bank/create-account/:bankId` - Crear una cuenta bancaria
+- `PATCH /api/bank/update-account/:id` - Actualizar una cuenta bancaria
+- `DELETE /api/bank/delete-account/:id` - Eliminar una cuenta bancaria
+- `POST /api/bank/account/transaction` - Crear una transacción entre cuentas
 
-## 🗄️ Database
+### Productos (`/api/product`)
+- Gestión de productos y categorías
 
-The application uses PostgreSQL with the following configuration:
-- **Host**: `localhost` (configurable via `DB_HOST`)
-- **Port**: `5432` (configurable via `DB_PORT`)
-- **Database**: `financial_db` (configurable via `DB_NAME`)
-- **Auto-synchronization**: Enabled for development
+### Historial de Compras (`/api/buy-history`)
+- Gestión del historial de compras
+
+### Contador (`/api/contador`)
+- Operaciones de contadores
+
+### Trofeos (`/api/tropy`)
+- Sistema de trofeos y logros
+
+## 🗄️ Base de Datos
+
+La aplicación utiliza PostgreSQL con la siguiente configuración:
+- **Host**: `localhost` (configurable mediante `DB_HOST`)
+- **Puerto**: `5432` (configurable mediante `DB_PORT`)
+- **Base de Datos**: `financial_db` (configurable mediante `DB_NAME`)
+- **Sincronización automática**: Habilitada para desarrollo
+- **Carga automática de entidades**: Habilitada
+
+### Entidades Principales
+- **Bank**: Bancos con relación uno-a-muchos con cuentas
+- **BankAccount**: Cuentas bancarias con número único, tipo y balance
+- **Transaction**: Transacciones entre cuentas bancarias
+- **Product**: Productos con categorías
+- **BuyHistory**: Historial de compras con detalles
+- **Contador**: Contadores y estadísticas
+- **Tropy**: Sistema de trofeos
 
 ## 🐳 Docker
 
-The project includes Docker support for easy development setup:
+El proyecto incluye soporte Docker para facilitar la configuración del entorno de desarrollo:
 
 ```bash
-# Start the database
+# Iniciar la base de datos
 docker-compose up -d
 
-# Stop the database
+# Detener la base de datos
 docker-compose down
 ```
 
-## 🔒 Environment Variables
+El archivo `docker-compose.yml` configura un contenedor PostgreSQL 15.1 con:
+- Volúmenes persistentes para los datos
+- Variables de entorno desde el archivo `.env`
+- Puerto configurable
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DB_PASSWORD` | Database password | - |
-| `DB_NAME` | Database name | - |
-| `DB_HOST` | Database host | - |
-| `DB_PORT` | Database port | 5432 |
-| `DB_USERNAME` | Database username | - |
-| `JWT_SECRET` | JWT secret key | - |
-| `PORT` | Application port | 3000 |
-| `HOST_API` | API host URL | - |
+## 🔒 Variables de Entorno
+
+| Variable | Descripción | Valor por Defecto |
+|----------|-------------|-------------------|
+| `DB_PASSWORD` | Contraseña de la base de datos | - |
+| `DB_NAME` | Nombre de la base de datos | - |
+| `DB_HOST` | Host de la base de datos | - |
+| `DB_PORT` | Puerto de la base de datos | 5432 |
+| `DB_USERNAME` | Usuario de la base de datos | - |
+| `JWT_SECRET` | Clave secreta para JWT | - |
+| `PORT` | Puerto de la aplicación | 3000 |
+| `HOST_API` | URL del host de la API | - |
 
 ## 🧪 Testing
 
 ```bash
-# Run unit tests
+# Ejecutar tests unitarios
 yarn test
 
-# Run e2e tests
+# Ejecutar tests end-to-end
 yarn test:e2e
 
-# Run tests with coverage
+# Ejecutar tests con cobertura
 yarn test:cov
+
+# Ejecutar tests en modo watch
+yarn test:watch
+
+# Ejecutar tests en modo debug
+yarn test:debug
 ```
 
-## 📝 Code Quality
+## 📝 Calidad de Código
 
-The project uses ESLint and Prettier for code quality:
+El proyecto utiliza ESLint y Prettier para mantener la calidad del código:
 
 ```bash
-# Run linting
+# Ejecutar linting
 yarn lint
 
-# Format code
+# Formatear código
 yarn format
 ```
 
-## 🤝 Contributing
+## 🔍 Validación por Grupos
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests and linting
-5. Submit a pull request
+El proyecto implementa un sistema de validación en dos fases para optimizar el rendimiento:
 
-## 📄 License
+- **Grupo `base`**: Validaciones de formato, tipos de datos, rangos y tamaños
+- **Grupo `db`**: Validaciones que requieren acceso a la base de datos (como `@isUnique`)
 
-This project is private and unlicensed.
+Esto evita ejecutar validaciones costosas cuando ya hay errores en las validaciones básicas.
 
-## 👥 Authors
+Para más información, consulta la documentación en `docs/validacion-por-grupos.md`.
+
+### Validadores Personalizados
+
+- **@isUnique**: Valida la unicidad de campos en la base de datos
+- **@isExist**: Valida la existencia de registros en la base de datos
+- **Pipes personalizados**: Validación de existencia de bancos y cuentas antes de operaciones
+
+## 📚 Documentación Adicional
+
+- **Validación por Grupos**: Consulta `docs/validacion-por-grupos.md` para entender el sistema de validación en dos fases implementado en el proyecto.
+
+## 🏗️ Arquitectura
+
+### Validación
+- Validación global con grupo `base` por defecto
+- Validación encadenada en endpoints específicos (base → db)
+- Validadores personalizados con inyección de dependencias
+- Pipes personalizados para validación de existencia
+
+### Mappers
+- Transformación de datos de respuesta
+- Interfaces tipadas para respuestas de API
+
+### Relaciones de Base de Datos
+- **Bank** ↔ **BankAccount**: Uno a muchos
+- **BankAccount** ↔ **Transaction**: Uno a muchos (origen y destino)
+- **BankAccount** ↔ **BuyHistory**: Uno a muchos
+
+## 🤝 Contribuir
+
+1. Fork el repositorio
+2. Crea una rama para tu feature
+3. Realiza tus cambios
+4. Ejecuta tests y linting
+5. Envía un pull request
+
+## 📄 Licencia
+
+Este proyecto es privado y no tiene licencia.
+
+## 👥 Autores
 
 - Financial Management System Team
 
 ---
 
-For more information, please contact the development team.
+Para más información, contacta al equipo de desarrollo.
