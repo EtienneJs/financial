@@ -30,7 +30,7 @@ export class BuyHistoryController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.buyHistoryService.remove(+id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.buyHistoryService.remove(id, user);
   }
 }

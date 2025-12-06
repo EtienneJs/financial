@@ -77,7 +77,7 @@ export class BankAccountService {
                 message: 'Cuenta creada exitosamente',
             };
         } catch (error) {
-            if (error instanceof ConflictException || error instanceof NotFoundException) {
+            if (error instanceof ConflictException || error instanceof NotFoundException || error instanceof BadRequestException) {
                 throw error;
             }
             throw new BadRequestException('Error al crear la cuenta');
@@ -156,11 +156,22 @@ export class BankAccountService {
             return await transactionalEntityManager.save(BankAccount, updatedAccount);
         });
     }
-    async removeAccount(id: string): Promise<void> {
-        const account = await this.bankAccountRepository.findOne({ where: { id } });
+    async removeAccount(id: string, user?: any): Promise<void> {
+        // Verificar si la cuenta bancaria existe y carga las relaciones necesarias
+        const account = await this.bankAccountRepository.findOne({ 
+            where: { id },
+            relations: ['bank', 'bank.user']
+        });
+
         if (!account) {
             throw new NotFoundException('Cuenta bancaria no encontrada');
         }
+
+        // Si tenemos usuario, validar que la cuenta pertenezca al usuario
+        if (user && account.bank.user.id !== user.id) {
+            throw new NotFoundException('Cuenta bancaria no encontrada');
+        }
+
         await this.bankAccountRepository.remove(account);
     }
 

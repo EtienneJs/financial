@@ -208,12 +208,12 @@ export class BankService {
   /**
    * Handles database-specific errors
    */
-  private handleDBErrors(error: any) {
+  private handleDBErrors(error: any): never {
     if (error.code === '23505') {
       throw new BadRequestException(error.detail);
     }
     
-    this.logger.error('Bank already exists', error);
+    this.logger.error('Unexpected database error', error);
     throw new InternalServerErrorException('Unexpected error, check server logs');
   }
 }

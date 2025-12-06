@@ -79,8 +79,24 @@ export class BuyHistoryService {
     });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} buyHistory`;
+  async remove(id: string, user: User): Promise<{ statusCode: number; message: string }> {
+    return await this.buyHistoryRepository.manager.transaction(async (manager) => {
+      // Buscar la compra existente y validar que pertenezca al usuario
+      const buyHistory = await this.findBuyHistoryWithRelations(manager, id, user);
+      
+      // Devolver el saldo a la cuenta bancaria
+      const bankAccount = buyHistory.banckAccount;
+      bankAccount.current_balance += buyHistory.total;
+      await manager.save(BankAccount, bankAccount);
+      
+      // Eliminar la compra (los detalles se eliminarán en cascada)
+      await manager.delete(BuyHistory, { id });
+      
+      return {
+        statusCode: 200,
+        message: 'Compra eliminada exitosamente',
+      };
+    });
   }
 
   async createNewHistoryBuy(createBuyHistoryDto: CreateBuyHistoryDto, user: User) {

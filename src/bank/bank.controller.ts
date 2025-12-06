@@ -41,20 +41,20 @@ export class BankController {
   @UsePipes(
     new ValidationPipe({ groups: ['base'], validateCustomDecorators: true }),
   )
-  update(@Param('id',ParseUUIDPipe,ExistsBankPipe) id: string, @Body() updateBankDto: UpdateBankDto, @CurrentUser() user: User) {
-    this.bankService.update(id, updateBankDto, user);
+  async update(@Param('id',ParseUUIDPipe,ExistsBankPipe) id: string, @Body() updateBankDto: UpdateBankDto, @CurrentUser() user: User) {
+    const result = await this.bankService.update(id, updateBankDto, user);
     return {
-      status: 200,
-      message: 'Bank updated successfully'
+      statusCode: result?.statusCode || 200,
+      message: result?.message || 'Bank updated successfully'
     };
   }
 
   @Delete(':id')
-  remove(@Param('id',ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    this.bankService.remove(id, user);
+  async remove(@Param('id',ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    const result = await this.bankService.remove(id, user);
     return {
-      status: 200,
-      message: 'Bank deleted successfully'
+      statusCode: result?.statusCode || 200,
+      message: result?.message || 'Bank deleted successfully'
     };
   }
   @Post('/create-account/:bankId')
@@ -78,8 +78,8 @@ export class BankController {
     return this.bankAccountService.updateAccount(id, updateBankDto, user);
   }
   @Delete('/delete-account/:id')
-  removeAccount(@Param('id', ParseUUIDPipe) id: string) {
-    return this.bankAccountService.removeAccount(id);
+  removeAccount(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.bankAccountService.removeAccount(id, user);
   }
   @Post("/account/transaction")
   createTransaction(
