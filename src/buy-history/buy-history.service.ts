@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateBuyHistoryDto } from './dto/create-buy-history.dto';
 import { UpdateBuyHistoryDto } from './dto/update-buy-history.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +10,7 @@ import { ProductService } from 'src/product/product.service';
 import { Product } from 'src/product/entities/product.entity';
 import { BankAccount } from 'src/bank/entities/bank-account.entity';
 import { CreateBuyHistoryDetalleDto } from './dto/create-buy-history-detalle.dto';
+import { User } from 'src/auth/entities/user.entity';
 
 @Injectable()
 export class BuyHistoryService {
@@ -21,13 +22,17 @@ export class BuyHistoryService {
     private readonly productService: ProductService,
   ) {}
 
-  findAll() {
-    return `This action returns all buyHistory`;
+  findAll(user: User) {
+    return this.buyHistoryRepository.find({
+      where: { user: { id: user.id } },
+      relations: ['banckAccount', 'buyHistoryDetalle', 'buyHistoryDetalle.products'],
+    });
   }
 
-  async findOne(id: string): Promise<BuyHistory> {
+  async findOne(id: string, user: User): Promise<BuyHistory> {
     const findBuyHistory = await this.buyHistoryRepository.findOne({
-      where: { id }
+      where: { id, user: { id: user.id } },
+      relations: ['banckAccount', 'buyHistoryDetalle', 'buyHistoryDetalle.products'],
     });
     
     if (!findBuyHistory) {
@@ -37,12 +42,12 @@ export class BuyHistoryService {
     return findBuyHistory;
   }
 
-  async update(id: string, updateBuyHistoryDto: UpdateBuyHistoryDto) {
+  async update(id: string, updateBuyHistoryDto: UpdateBuyHistoryDto, user: User) {
     return await this.buyHistoryRepository.manager.transaction(async (manager) => {
       const { bankAcount, description, detailBuy } = updateBuyHistoryDto;
 
       // Buscar la compra existente
-      const buyHistory = await this.findBuyHistoryWithRelations(manager, id);
+      const buyHistory = await this.findBuyHistoryWithRelations(manager, id, user);
       
       // Manejar cambio de cuenta bancaria
       const { oldAccount, totalDifference } = await this.handleBankAccountChange(
@@ -78,14 +83,19 @@ export class BuyHistoryService {
     return `This action removes a #${id} buyHistory`;
   }
 
-  async createNewHistoryBuy(createBuyHistoryDto: CreateBuyHistoryDto) {
+  async createNewHistoryBuy(createBuyHistoryDto: CreateBuyHistoryDto, user: User) {
     return await this.buyHistoryRepository.manager.transaction(async (transactionalEntityManager) => {
       const { bankAcount, description, detailBuy } = createBuyHistoryDto;
 
-      // Validar cuenta bancaria
+      // Validar cuenta bancaria y que pertenezca al usuario
       const bankAccount = await this.bankAccountService.findOne(bankAcount);
       if (!bankAccount) {
         throw new NotFoundException("Cuenta bancaria no encontrada");
+      }
+
+      // Verificar que la cuenta bancaria pertenezca al usuario
+      if (bankAccount.bank.user.id !== user.id) {
+        throw new ForbiddenException("La cuenta bancaria no pertenece al usuario");
       }
 
       // Validar productos
@@ -95,7 +105,8 @@ export class BuyHistoryService {
       const buyHistory = await this.createBuyHistory(
         transactionalEntityManager, 
         bankAccount, 
-        description
+        description,
+        user
       );
 
       // Procesar productos y calcular total
@@ -131,10 +142,10 @@ export class BuyHistoryService {
 
   // Métodos privados para mejorar legibilidad
 
-  private async findBuyHistoryWithRelations(manager: any, id: string): Promise<BuyHistory> {
+  private async findBuyHistoryWithRelations(manager: any, id: string, user: User): Promise<BuyHistory> {
     const buyHistory = await manager.findOne(BuyHistory, {
-      where: { id },
-      relations: ['banckAccount'],
+      where: { id, user: { id: user.id } },
+      relations: ['banckAccount', 'user'],
     });
 
     if (!buyHistory) {
@@ -240,13 +251,15 @@ export class BuyHistoryService {
   private async createBuyHistory(
     manager: any, 
     bankAccount: BankAccount, 
-    description: string
+    description: string,
+    user: User
   ): Promise<BuyHistory> {
     const buyHistory = manager.create(BuyHistory, {
       banckAccount: bankAccount,
       date: new Date(),
       description,
       total: 0,
+      user: user,
     });
 
     return await manager.save(BuyHistory, buyHistory);

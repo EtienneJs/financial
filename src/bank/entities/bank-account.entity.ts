@@ -10,9 +10,7 @@ export class BankAccount {
 
 
     @Column('integer', {
-        unique: true,
         nullable: false,
-        
     })
     nro_account: number;
 

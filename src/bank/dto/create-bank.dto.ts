@@ -2,16 +2,10 @@ import { ArrayMinSize, IsOptional, IsString, MinLength, ValidateNested } from "c
 import { CreateBankAccountDto } from "./create-bank-account.dto";
 import { Type } from "class-transformer";
 import { UniqueTypeAccount } from "../validadorCustom/validador-type-accounts";
-import { isUnique } from "../../validatonsGlobals/validator-unique-nro-count";
 
 export class CreateBankDto {
     @IsString({ groups: ['base'] })
     @MinLength(6, { groups: ['base'] })
-    @isUnique({
-    column:"name",
-    tableName:"banco",
-    query:"INSERT"
-    }, { groups: ['db'] })
     name: string;
 
     @IsOptional({ groups: ['base'] })

@@ -26,7 +26,7 @@ interface IsUniqueArrayValueInterface {
 
   defaultMessage(args: ValidationArguments) {
     const {field}: IsUniqueArrayValueInterface = args?.constraints[0];
-    return `The fields (${field.join(', ')}) must be unique.`;
+    return `The fields (${field.join(' or ')}) must be unique.`;
   }
 }
 

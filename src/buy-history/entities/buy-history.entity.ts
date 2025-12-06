@@ -2,6 +2,7 @@ import { BankAccount } from "src/bank/entities/bank-account.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { BuyHistoryDetalle } from "./buy-history-detalle.entity";
 import { Product } from "src/product/entities/product.entity";
+import { User } from "src/auth/entities/user.entity";
 
 
 
@@ -25,6 +26,11 @@ export class BuyHistory {
     @ManyToOne(() => BankAccount, (banckAccount) => banckAccount.buyHistory, {
     })
     banckAccount: BankAccount;
+
+    @ManyToOne(() => User, (user) => user.buyHistories, {
+        nullable: false,
+    })
+    user: User;
 
     @OneToMany(() => BuyHistoryDetalle, (buy_history_detalle) => buy_history_detalle.buyHistory, {
         cascade: true,
